@@ -7,7 +7,9 @@ import {
   Info,
   Siren,
   ShieldCheck,
+  Crosshair,
 } from 'lucide-react';
+import { DroneThermalPatrol } from './DroneThermalPatrol';
 
 interface NodeBox {
   x: number; // center x
@@ -231,6 +233,7 @@ const legend: { label: string; cls: string }[] = [
 
 export function EventMap() {
   const { zones, predictions, execution, mode, activeSOS, setIsSOSModalOpen } = useCommandCenter();
+  const [isDroneView, setIsDroneView] = useState(false);
   const [facilityFilter, setFacilityFilter] = useState<FacilityKind>('all');
   const [selectedFacility, setSelectedFacility] = useState<VenueFacility | null>(null);
 
@@ -282,21 +285,43 @@ export function EventMap() {
           </p>
         </div>
 
-        {/* Legend */}
-        <div className="flex items-center gap-3">
-          {legend.map((l) => (
-            <span
-              key={l.label}
-              className="flex items-center gap-1.5 text-[11px] text-slate-400"
-            >
-              <span className={`h-2 w-2 rounded-full ${l.cls}`} />
-              {l.label}
-            </span>
-          ))}
+        {/* View Switcher & Legend */}
+        <div className="flex items-center gap-2 sm:gap-3">
+          <button
+            type="button"
+            onClick={() => setIsDroneView((v) => !v)}
+            className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 font-mono text-[11px] font-bold transition shadow-sm ${
+              isDroneView
+                ? 'border border-rose-500 bg-rose-600 text-white shadow-rose-600/30'
+                : 'border border-sky-500/50 bg-sky-950/80 hover:bg-sky-900 text-sky-300'
+            }`}
+          >
+            <Crosshair className="h-3.5 w-3.5 animate-pulse" />
+            <span>{isDroneView ? '🔴 EXIT DRONE FEED' : '🛰️ 3D DRONE THERMAL PATROL'}</span>
+          </button>
+
+          <div className="hidden md:flex items-center gap-2">
+            {legend.map((l) => (
+              <span
+                key={l.label}
+                className="flex items-center gap-1 text-[11px] text-slate-400"
+              >
+                <span className={`h-2 w-2 rounded-full ${l.cls}`} />
+                {l.label}
+              </span>
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* CCTV + GPS Sensor Fusion & Privacy-by-Design Bar */}
+      {/* 3D Drone View or 2D Tactical Map */}
+      {isDroneView ? (
+        <div className="mt-1 animate-in fade-in duration-200">
+          <DroneThermalPatrol onClose={() => setIsDroneView(false)} />
+        </div>
+      ) : (
+        <>
+          {/* CCTV + GPS Sensor Fusion & Privacy-by-Design Bar */}
       <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-800 bg-slate-900/60 px-3 py-1.5 text-[11px] font-mono">
         <div className="flex flex-wrap items-center gap-2.5">
           <span className="flex items-center gap-1.5 text-slate-200 font-bold">
@@ -886,6 +911,8 @@ export function EventMap() {
         </span>
         <span>MMRDA VENUE GRID // BKC SECTOR 4</span>
       </div>
-    </div>
+    </>
+    )}
+  </div>
   );
 }
