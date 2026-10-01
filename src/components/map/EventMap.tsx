@@ -307,12 +307,17 @@ export function EventMap() {
           <defs>
             <style>{`
               @keyframes flowDash {
-                to {
-                  stroke-dashoffset: -28;
-                }
+                to { stroke-dashoffset: -28; }
               }
               .animate-reroute-flow {
                 animation: flowDash 0.8s linear infinite;
+              }
+              @keyframes badgePulse {
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0.55; }
+              }
+              .rush-badge-pulse {
+                animation: badgePulse 1.1s ease-in-out infinite;
               }
             `}</style>
             <filter id="neon-glow-map" x="-20%" y="-20%" width="140%" height="140%">
@@ -558,37 +563,51 @@ export function EventMap() {
           {activeFacilities.map((f) => {
             const isSelected = selectedFacility?.id === f.id;
             const rush = getRushColor(f.rushLevel);
+            // Badge width: wider for multi-char labels like "14m" vs "1m"
+            const badgeW = f.queueMin >= 10 ? 42 : f.queueMin === 0 ? 36 : 32;
 
             return (
               <g
                 key={f.id}
                 onClick={() => setSelectedFacility(isSelected ? null : f)}
-                className="cursor-pointer transition-transform hover:scale-125"
+                style={{ cursor: 'pointer' }}
                 transform={`translate(${f.x}, ${f.y})`}
               >
+                {/* Selected Outer Glow Ring */}
+                {isSelected && (
+                  <circle
+                    r={22}
+                    fill="none"
+                    stroke={f.color}
+                    strokeWidth={2}
+                    strokeDasharray="4 3"
+                    opacity={0.7}
+                    className="rush-badge-pulse"
+                  />
+                )}
+
                 {/* Floating Rush Wait Time Badge for non-exit stalls */}
                 {f.kind !== 'exit' && (
-                  <g transform="translate(0, -18)">
+                  <g transform="translate(0, -26)">
                     <rect
-                      x={-18}
-                      y={-8}
-                      width={36}
-                      height={15}
-                      rx={4}
+                      x={-(badgeW / 2)}
+                      y={-9}
+                      width={badgeW}
+                      height={17}
+                      rx={5}
                       fill={rush.bg}
                       stroke={rush.border}
-                      strokeWidth={1}
-                      className={`shadow-md ${f.rushLevel === 'critical' ? 'animate-pulse' : ''}`}
+                      strokeWidth={1.2}
+                      className={f.rushLevel === 'critical' ? 'rush-badge-pulse' : ''}
                     />
                     <text
                       x={0}
-                      y={3}
+                      y={4}
                       textAnchor="middle"
-                      fill={rush.text}
+                      fill="#ffffff"
                       fontFamily="monospace"
-                      fontSize={8}
+                      fontSize={9}
                       fontWeight="bold"
-                      className="pointer-events-none drop-shadow"
                     >
                       {f.queueMin === 0 ? 'FAST' : `${f.queueMin}m`}
                     </text>
@@ -597,32 +616,32 @@ export function EventMap() {
 
                 {/* Stall Aura Glow */}
                 <circle
-                  r={16}
+                  r={17}
                   fill={f.color}
-                  fillOpacity={isSelected ? 0.5 : 0.22}
+                  fillOpacity={isSelected ? 0.5 : 0.2}
                   stroke={f.color}
-                  strokeWidth={isSelected ? 2.5 : 1}
+                  strokeWidth={isSelected ? 2.5 : 1.2}
                 />
                 {/* Stall Icon */}
                 <text
                   x={0}
-                  y={4}
+                  y={5}
                   textAnchor="middle"
-                  fontSize={13}
-                  className="select-none pointer-events-none"
+                  fontSize={14}
+                  style={{ userSelect: 'none', pointerEvents: 'none' }}
                 >
                   {f.icon}
                 </text>
-                {/* Tiny Label under Icon */}
+                {/* ID Label under Icon */}
                 <text
                   x={0}
-                  y={23}
+                  y={29}
                   textAnchor="middle"
-                  fill="#cbd5e1"
+                  fill="#94a3b8"
                   fontFamily="monospace"
-                  fontSize={8}
+                  fontSize={9}
                   fontWeight="bold"
-                  className="pointer-events-none drop-shadow"
+                  style={{ pointerEvents: 'none' }}
                 >
                   {f.id.toUpperCase()}
                 </text>
@@ -743,130 +762,148 @@ export function EventMap() {
             </g>
           )}
         </svg>
+      </div>
 
-        {/* Selected Stall Tooltip Card */}
-        {selectedFacility && (() => {
-          const rush = getRushColor(selectedFacility.rushLevel);
-          return (
-            <div className="absolute top-4 right-4 z-20 w-80 rounded-2xl border border-slate-700 bg-slate-950/95 p-4 shadow-2xl backdrop-blur-md animate-in fade-in duration-150">
-              {/* Card Header */}
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex items-center gap-2.5">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-800 text-lg shadow-inner">
-                    {selectedFacility.icon}
-                  </span>
-                  <div>
-                    <h4 className="font-semibold text-xs text-white leading-tight">
-                      {selectedFacility.name}
-                    </h4>
-                    <div className="mt-0.5 flex items-center gap-1.5">
-                      <span
-                        className="font-mono text-[10px] font-bold uppercase tracking-wider"
-                        style={{ color: selectedFacility.color }}
-                      >
-                        {selectedFacility.badge}
+      {/* Selected Stall Info Panel — below map, always visible, never clipped */}
+      {selectedFacility && (() => {
+        const rush = getRushColor(selectedFacility.rushLevel);
+        return (
+          <div className="mt-3 rounded-2xl border border-slate-700 bg-slate-900/90 shadow-xl">
+            {/* Header */}
+            <div className="flex items-start justify-between gap-3 px-4 pt-4 pb-3 border-b border-slate-800">
+              <div className="flex items-center gap-3 min-w-0">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-800 text-xl shadow-inner">
+                  {selectedFacility.icon}
+                </span>
+                <div className="min-w-0">
+                  <h4 className="font-bold text-sm text-white leading-tight truncate">
+                    {selectedFacility.name}
+                  </h4>
+                  <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                    <span className="font-mono text-xs font-bold uppercase tracking-wide" style={{ color: selectedFacility.color }}>
+                      {selectedFacility.badge}
+                    </span>
+                    {selectedFacility.kind !== 'exit' && (
+                      <span className={`rounded px-2 py-0.5 font-mono text-xs font-bold uppercase border ${rush.badgeBg}`}>
+                        {rush.label}
                       </span>
-                      {selectedFacility.kind !== 'exit' && (
-                        <span className={`rounded px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase border ${rush.badgeBg}`}>
-                          {rush.label}
-                        </span>
-                      )}
-                    </div>
+                    )}
                   </div>
                 </div>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                {selectedFacility.kind !== 'exit' && (
+                  <span className={`font-mono text-sm font-black ${
+                    selectedFacility.rushLevel === 'critical' ? 'text-rose-400 animate-pulse' :
+                    selectedFacility.rushLevel === 'high' ? 'text-rose-300' :
+                    selectedFacility.rushLevel === 'moderate' ? 'text-amber-300' :
+                    'text-emerald-400'
+                  }`}>
+                    {selectedFacility.queueMin === 0 ? '0m wait' : `${selectedFacility.queueMin}m wait`}
+                  </span>
+                )}
                 <button
                   type="button"
                   onClick={() => setSelectedFacility(null)}
-                  className="rounded-lg p-1 text-slate-400 hover:bg-slate-800 hover:text-white text-xs transition"
+                  className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-700 hover:text-white transition text-sm"
                 >
                   ✕
                 </button>
               </div>
+            </div>
 
-              {/* Description */}
-              <p className="mt-2.5 text-[11px] text-slate-300 leading-snug">
-                {selectedFacility.desc}
-              </p>
+            <div className="px-4 pb-4 pt-3 space-y-3">
+              <p className="text-xs text-slate-300 leading-relaxed">{selectedFacility.desc}</p>
 
-              {/* Stall Live Rush & Queue Metrics */}
+              {/* Queue Metrics Grid */}
               {selectedFacility.kind !== 'exit' && (
-                <div className="mt-3 rounded-xl border border-slate-800 bg-slate-900/60 p-2.5">
-                  <div className="flex items-center justify-between text-[11px] font-mono mb-1.5">
-                    <span className="text-slate-400 flex items-center gap-1">
-                      <Clock className="h-3 w-3 text-info" />
-                      Est. Queue Wait:
-                    </span>
-                    <span className={`font-bold text-sm ${
-                      selectedFacility.rushLevel === 'critical' ? 'text-rose-400 font-black animate-pulse' :
-                      selectedFacility.rushLevel === 'high' ? 'text-rose-300 font-bold' :
-                      selectedFacility.rushLevel === 'moderate' ? 'text-amber-300 font-bold' :
-                      'text-emerald-400 font-bold'
-                    }`}>
-                      {selectedFacility.queueMin === 0 ? 'Zero Wait (0m)' : `${selectedFacility.queueMin} Minutes`}
-                    </span>
-                  </div>
-
-                  {/* Rush Bar */}
-                  <div className="h-2 w-full rounded-full bg-slate-800 overflow-hidden mb-2">
-                    <div
-                      className={`h-full rounded-full transition-all duration-500 ${rush.barColor}`}
-                      style={{ width: rush.barWidth }}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2 text-[10px] font-mono text-slate-400 pt-1 border-t border-slate-800/80">
-                    <div className="flex items-center gap-1">
-                      <Users className="h-3 w-3 text-slate-400" />
-                      <span>Queue: <strong className="text-slate-200">{selectedFacility.queueCount} people</strong></span>
+                <>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    <div className="rounded-lg border border-slate-800 bg-slate-950/60 p-2.5">
+                      <div className="flex items-center gap-1 text-xs text-slate-400 mb-1">
+                        <Clock className="h-3 w-3 text-info shrink-0" /> Est. Wait
+                      </div>
+                      <p className={`font-mono text-base font-black leading-none ${
+                        selectedFacility.rushLevel === 'critical' ? 'text-rose-400' :
+                        selectedFacility.rushLevel === 'high' ? 'text-rose-300' :
+                        selectedFacility.rushLevel === 'moderate' ? 'text-amber-300' :
+                        'text-emerald-400'
+                      }`}>
+                        {selectedFacility.queueMin === 0 ? '< 1 min' : `${selectedFacility.queueMin} min`}
+                      </p>
                     </div>
-                    <div>
-                      <span>Flow: <strong className="text-slate-200">{selectedFacility.tapsOrStaff}</strong></span>
+                    <div className="rounded-lg border border-slate-800 bg-slate-950/60 p-2.5">
+                      <div className="flex items-center gap-1 text-xs text-slate-400 mb-1">
+                        <Users className="h-3 w-3 shrink-0" /> In Queue
+                      </div>
+                      <p className="font-mono text-base font-black text-white leading-none">
+                        {selectedFacility.queueCount}
+                      </p>
+                    </div>
+                    <div className="rounded-lg border border-slate-800 bg-slate-950/60 p-2.5 col-span-2">
+                      <p className="text-xs text-slate-400 mb-1">Throughput / Staff</p>
+                      <p className="font-mono text-xs font-bold text-slate-200 leading-snug">
+                        {selectedFacility.tapsOrStaff}
+                      </p>
                     </div>
                   </div>
-                </div>
+
+                  {/* Concourse Load Bar */}
+                  <div>
+                    <div className="flex justify-between text-xs text-slate-400 mb-1.5">
+                      <span>Concourse Load</span>
+                      <span className="font-mono font-semibold" style={{ color: rush.bg }}>{rush.label}</span>
+                    </div>
+                    <div className="h-2.5 w-full rounded-full bg-slate-800 overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all duration-700 ${rush.barColor}`}
+                        style={{ width: rush.barWidth }}
+                      />
+                    </div>
+                  </div>
+                </>
               )}
 
-              {/* Smart Reroute / Dispersion Recommendation */}
+              {/* AI Recommendation */}
               {selectedFacility.recommendation && (
-                <div className="mt-2.5 rounded-xl border border-sky-500/30 bg-sky-950/40 p-2.5 text-[11px]">
-                  <div className="flex items-start gap-1.5 text-sky-200">
-                    <Sparkles className="h-3.5 w-3.5 text-sky-400 shrink-0 mt-0.5" />
-                    <p className="leading-snug">
-                      {selectedFacility.recommendation}
-                    </p>
+                <div className="rounded-xl border border-sky-500/30 bg-sky-950/40 p-3">
+                  <div className="flex items-start gap-2 text-sky-200 mb-2">
+                    <Sparkles className="h-4 w-4 text-sky-400 shrink-0 mt-0.5" />
+                    <p className="text-xs leading-relaxed">{selectedFacility.recommendation}</p>
                   </div>
-
-                  {/* 1-Click Divert Broadcast Button if Congested */}
                   {(selectedFacility.rushLevel === 'critical' || selectedFacility.rushLevel === 'high') && (
                     <button
                       type="button"
                       onClick={() => setIsBroadcastModalOpen(true)}
-                      className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg border border-purple-500/50 bg-purple-600/80 hover:bg-purple-600 py-1.5 text-[10px] font-bold text-white transition shadow-sm"
+                      className="flex w-full items-center justify-center gap-2 rounded-lg border border-purple-500/50 bg-purple-600 hover:bg-purple-500 py-2 text-xs font-bold text-white transition shadow-md"
                     >
-                      <Radio className="h-3 w-3 animate-pulse" />
-                      Broadcast Divert to Gate C Stalls
+                      <Radio className="h-3.5 w-3.5 animate-pulse" />
+                      📢 Broadcast Diversion via Stadium PA & Screens
                     </button>
                   )}
                 </div>
               )}
 
-              <div className="mt-2.5 flex items-center justify-between border-t border-slate-800/80 pt-2 text-[10px] font-mono">
-                <span className="text-slate-400">Live Telemetry:</span>
-                <span className="font-semibold text-emerald-400 flex items-center gap-1">
+              {/* Live Status Footer */}
+              <div className="flex items-center justify-between text-xs font-mono text-slate-400 border-t border-slate-800 pt-2.5">
+                <span>Live Telemetry:</span>
+                <span className="font-semibold text-emerald-400 flex items-center gap-1.5">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping" />
                   {selectedFacility.status}
                 </span>
               </div>
             </div>
-          );
-        })()}
-      </div>
+          </div>
+        );
+      })()}
 
-      {/* Footer Info */}
-      <div className="mt-2 flex items-center justify-between text-[11px] text-slate-400 font-mono">
+      {/* Footer */}
+      <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400 font-mono">
         <span className="flex items-center gap-1">
           <Info className="h-3 w-3 text-info" />
-          Click any stall icon (💧 Water, 🚑 Med Kit, ⚡ Energy Drink, 🚪 Exit) on the map for real-time status.
+          {selectedFacility
+            ? `Viewing: ${selectedFacility.name} — click map icon again to dismiss`
+            : 'Click any stall icon (💧 Water · 🚑 Med Kit · ⚡ Energy · 🚻 Restroom · 🚪 Exit) to inspect'}
         </span>
         <span>MMRDA VENUE GRID // BKC SECTOR 4</span>
       </div>
