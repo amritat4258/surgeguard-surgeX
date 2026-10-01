@@ -16,7 +16,6 @@ import { SOSDispatchModal } from '@/components/sos/SOSDispatchModal';
 import { PoliceDispatchModal } from '@/components/government/PoliceDispatchModal';
 import { PublicBroadcastModal } from '@/components/broadcast/PublicBroadcastModal';
 import AttendeeAppModal from '@/components/attendee/AttendeeAppModal';
-import RevenuePricingModal from '@/components/revenue/RevenuePricingModal';
 import HeatmapReplay from '@/components/replay/HeatmapReplay';
 
 function Dashboard() {
@@ -34,8 +33,6 @@ function Dashboard() {
     setIsBroadcastModalOpen,
     isAttendeeModalOpen,
     setIsAttendeeModalOpen,
-    isRevenueModalOpen,
-    setIsRevenueModalOpen,
   } = useCommandCenter();
 
   return (
@@ -120,11 +117,6 @@ function Dashboard() {
         onClose={() => setIsAttendeeModalOpen(false)}
       />
 
-      {/* Revenue & Pricing Pitch Modal */}
-      <RevenuePricingModal
-        isOpen={isRevenueModalOpen}
-        onClose={() => setIsRevenueModalOpen(false)}
-      />
     </div>
   );
 }

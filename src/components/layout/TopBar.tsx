@@ -1,4 +1,4 @@
-import { Play, Pause, RotateCcw, ShieldAlert, Siren, Megaphone, Smartphone, TrendingUp } from 'lucide-react';
+import { Play, Pause, RotateCcw, ShieldAlert, Siren, Megaphone, Smartphone } from 'lucide-react';
 import { useCommandCenter } from '@/state/CommandCenterProvider';
 import type { FeedStatus, SimStatus } from '@/types';
 
@@ -58,7 +58,6 @@ export function TopBar() {
     setIsPoliceModalOpen,
     setIsBroadcastModalOpen,
     setIsAttendeeModalOpen,
-    setIsRevenueModalOpen,
     runSurgeScenario,
     pause,
     resume,
@@ -121,17 +120,6 @@ export function TopBar() {
         >
           <Smartphone className="h-4 w-4 text-emerald-400" />
           <span>📱 ATTENDEE APP</span>
-        </button>
-
-        {/* 0b. Revenue & Pricing Pitch */}
-        <button
-          type="button"
-          onClick={() => setIsRevenueModalOpen(true)}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-amber-500/40 bg-amber-950/40 px-3 py-2 text-xs font-mono font-bold text-amber-300 hover:bg-amber-900/60 hover:text-white transition hover:scale-105 active:scale-95"
-          title="Revenue model & pricing tiers"
-        >
-          <TrendingUp className="h-4 w-4 text-amber-400" />
-          <span>💰 REVENUE PITCH</span>
         </button>
 
         {/* 1. Stadium PA & Digital Screens (Inside stadium speakers & digital signage) */}
