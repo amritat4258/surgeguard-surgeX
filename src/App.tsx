@@ -15,6 +15,9 @@ import { ChaosController } from '@/components/telemetry/ChaosController';
 import { SOSDispatchModal } from '@/components/sos/SOSDispatchModal';
 import { PoliceDispatchModal } from '@/components/government/PoliceDispatchModal';
 import { PublicBroadcastModal } from '@/components/broadcast/PublicBroadcastModal';
+import AttendeeAppModal from '@/components/attendee/AttendeeAppModal';
+import RevenuePricingModal from '@/components/revenue/RevenuePricingModal';
+import HeatmapReplay from '@/components/replay/HeatmapReplay';
 
 function Dashboard() {
   const {
@@ -29,6 +32,10 @@ function Dashboard() {
     setIsPoliceModalOpen,
     isBroadcastModalOpen,
     setIsBroadcastModalOpen,
+    isAttendeeModalOpen,
+    setIsAttendeeModalOpen,
+    isRevenueModalOpen,
+    setIsRevenueModalOpen,
   } = useCommandCenter();
 
   return (
@@ -67,6 +74,9 @@ function Dashboard() {
           <TrendChart />
         </section>
 
+        {/* Historical Crowd Heatmap Replay — always visible below map */}
+        <HeatmapReplay />
+
         <section>
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-400">
             Zones Telemetry
@@ -102,6 +112,18 @@ function Dashboard() {
       <PublicBroadcastModal
         isOpen={isBroadcastModalOpen}
         onClose={() => setIsBroadcastModalOpen(false)}
+      />
+
+      {/* Mobile Attendee App Preview Modal */}
+      <AttendeeAppModal
+        isOpen={isAttendeeModalOpen}
+        onClose={() => setIsAttendeeModalOpen(false)}
+      />
+
+      {/* Revenue & Pricing Pitch Modal */}
+      <RevenuePricingModal
+        isOpen={isRevenueModalOpen}
+        onClose={() => setIsRevenueModalOpen(false)}
       />
     </div>
   );
