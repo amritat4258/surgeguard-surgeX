@@ -539,40 +539,6 @@ export function SOSDispatchModal({ isOpen, onClose }: SOSDispatchModalProps) {
                 </div>
               </div>
 
-              {/* Find My Friends & Safe Meeting Point Card */}
-              <div className="rounded-xl border border-sky-500/40 bg-sky-950/40 p-3 space-y-2">
-                <div className="flex items-center justify-between text-[10px] font-bold text-sky-300 font-mono">
-                  <span className="flex items-center gap-1.5">
-                    <Users className="h-3.5 w-3.5 text-sky-400" />
-                    Find My Friends (3 Connected via Peer Mesh)
-                  </span>
-                  <span className="rounded bg-sky-500/20 px-1.5 py-0.2 text-[9px] text-sky-300">
-                    5G ACTIVE
-                  </span>
-                </div>
-
-                <div className="space-y-1 text-[10px] font-mono">
-                  <div className="flex items-center justify-between bg-slate-950/70 p-1.5 rounded-lg border border-slate-800">
-                    <span className="text-slate-200">🟢 Rahul M.</span>
-                    <span className="text-slate-400">14m · Food Court</span>
-                  </div>
-                  <div className="flex items-center justify-between bg-slate-950/70 p-1.5 rounded-lg border border-slate-800">
-                    <span className="text-slate-200">🟡 Priya K.</span>
-                    <span className="text-amber-300">38m · Arena East</span>
-                  </div>
-                </div>
-
-                <div className="p-2 rounded-lg bg-sky-900/30 border border-sky-500/30 text-[10px]">
-                  <div className="flex items-center gap-1 text-sky-300 font-bold font-mono">
-                    <MapPin className="h-3.5 w-3.5 text-sky-400 shrink-0" />
-                    <span>Safe Meeting Point (Auto-Recommended):</span>
-                  </div>
-                  <p className="text-[9.5px] text-slate-300 mt-0.5">
-                    <b>Water Point #2 (Near Gate C)</b> · Low Density (&lt;1.4 p/m²) · Egress Corridor Clear
-                  </p>
-                </div>
-              </div>
-
               {/* Volunteer Opt-In Switch */}
               <div className="rounded-xl border border-slate-800 bg-slate-950 p-3 flex items-center justify-between">
                 <div>
