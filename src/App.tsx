@@ -14,6 +14,7 @@ import { ImpactPanel } from '@/components/impact/ImpactPanel';
 import { ChaosController } from '@/components/telemetry/ChaosController';
 import { SOSDispatchModal } from '@/components/sos/SOSDispatchModal';
 import { PoliceDispatchModal } from '@/components/government/PoliceDispatchModal';
+import { PublicBroadcastModal } from '@/components/broadcast/PublicBroadcastModal';
 
 function Dashboard() {
   const {
@@ -26,6 +27,8 @@ function Dashboard() {
     setIsSOSModalOpen,
     isPoliceModalOpen,
     setIsPoliceModalOpen,
+    isBroadcastModalOpen,
+    setIsBroadcastModalOpen,
   } = useCommandCenter();
 
   return (
@@ -93,6 +96,12 @@ function Dashboard() {
       <PoliceDispatchModal
         isOpen={isPoliceModalOpen}
         onClose={() => setIsPoliceModalOpen(false)}
+      />
+
+      {/* Stadium PA & Digital Screens Broadcast Modal */}
+      <PublicBroadcastModal
+        isOpen={isBroadcastModalOpen}
+        onClose={() => setIsBroadcastModalOpen(false)}
       />
     </div>
   );

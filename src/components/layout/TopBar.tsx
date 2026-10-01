@@ -1,4 +1,4 @@
-import { Play, Pause, RotateCcw, ShieldAlert, Siren } from 'lucide-react';
+import { Play, Pause, RotateCcw, ShieldAlert, Siren, Megaphone } from 'lucide-react';
 import { useCommandCenter } from '@/state/CommandCenterProvider';
 import type { FeedStatus, SimStatus } from '@/types';
 
@@ -56,6 +56,7 @@ export function TopBar() {
     activeSOS,
     setIsSOSModalOpen,
     setIsPoliceModalOpen,
+    setIsBroadcastModalOpen,
     runSurgeScenario,
     pause,
     resume,
@@ -109,7 +110,32 @@ export function TopBar() {
 
       {/* Controls */}
       <div className="flex items-center gap-2">
-        {/* Dedicated Standalone SOS Hub Button */}
+        {/* 1. Stadium PA & Digital Screens (Inside stadium speakers & digital signage) */}
+        <button
+          type="button"
+          onClick={() => setIsBroadcastModalOpen(true)}
+          className="inline-flex items-center gap-1.5 rounded-lg border border-purple-500/40 bg-purple-950/40 px-3 py-2 text-xs font-mono font-bold text-purple-300 hover:bg-purple-900/60 hover:text-white transition hover:scale-105 active:scale-95"
+          title="Inside stadium speakers & digital signage"
+        >
+          <Megaphone className="h-4 w-4 text-purple-400" />
+          <span>📢 STADIUM PA & SCREENS</span>
+        </button>
+
+        {/* 2. Mumbai Police & BMC Disaster Cell (Outside city traffic & Green Corridor) */}
+        <button
+          type="button"
+          onClick={() => setIsPoliceModalOpen(true)}
+          className="inline-flex items-center gap-1.5 rounded-lg border border-sky-500/40 bg-sky-950/40 px-3 py-2 text-xs font-mono font-bold text-sky-300 hover:bg-sky-900/60 hover:text-white transition hover:scale-105 active:scale-95"
+          title="Outside city traffic & Green Corridor"
+        >
+          <ShieldAlert className="h-4 w-4 text-sky-400" />
+          <span>🏛️ POLICE / BMC</span>
+          <span className="rounded bg-sky-900/80 border border-sky-400/50 px-1.5 py-0.2 text-[9px] text-sky-200">
+            CAP v1.2
+          </span>
+        </button>
+
+        {/* 3. On-Site Paramedic Dispatch & Emergency SOS (On-site paramedic dispatch) */}
         <button
           type="button"
           onClick={() => setIsSOSModalOpen(true)}
@@ -118,10 +144,10 @@ export function TopBar() {
               ? 'border-rose-500 bg-rose-600 text-white shadow-[0_0_20px_rgba(244,63,94,0.6)] animate-pulse'
               : 'border-rose-500/40 bg-rose-950/40 text-rose-300 hover:bg-rose-900/60 hover:text-white'
           }`}
-          title="Open Standalone Emergency SOS Hub"
+          title="On-site paramedic dispatch"
         >
           <Siren className={`h-4 w-4 ${activeSOS ? 'animate-spin' : 'text-rose-400'}`} style={{ animationDuration: '3s' }} />
-          <span>SOS HUB</span>
+          <span>🚨 EMERGENCY SOS</span>
           {activeSOS ? (
             <span className="rounded bg-rose-950/90 border border-rose-300 px-1.5 py-0.2 text-[9px] font-mono text-rose-200">
               {activeSOS.status.toUpperCase()}
@@ -131,20 +157,6 @@ export function TopBar() {
               READY
             </span>
           )}
-        </button>
-
-        {/* 1-Click Mumbai Police & BMC Disaster Cell Integration Button */}
-        <button
-          type="button"
-          onClick={() => setIsPoliceModalOpen(true)}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-sky-500/40 bg-sky-950/40 px-3 py-2 text-xs font-mono font-bold text-sky-300 hover:bg-sky-900/60 hover:text-white transition hover:scale-105 active:scale-95"
-          title="Open 1-Click Mumbai Police & BMC Disaster Cell Gateway"
-        >
-          <ShieldAlert className="h-4 w-4 text-sky-400" />
-          <span>POLICE / BMC</span>
-          <span className="rounded bg-sky-900/80 border border-sky-400/50 px-1.5 py-0.2 text-[9px] text-sky-200">
-            CAP v1.2
-          </span>
         </button>
 
         {!isLive && status === 'idle' && (

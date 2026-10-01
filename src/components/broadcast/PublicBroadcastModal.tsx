@@ -45,15 +45,15 @@ export function PublicBroadcastModal({ isOpen, onClose }: PublicBroadcastModalPr
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="font-display text-lg font-bold tracking-tight text-white">
-                  Public Broadcast & Attendee Wayfinding
+                  📢 Stadium PA & Digital Screens
                 </h2>
-                <span className="rounded-full border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-0.5 font-mono text-[10px] font-semibold text-emerald-400 flex items-center gap-1">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping" />
-                  LIVE RE-ROUTING SYNC
+                <span className="rounded-full border border-purple-500/40 bg-purple-500/10 px-2.5 py-0.5 font-mono text-[10px] font-semibold text-purple-300 flex items-center gap-1">
+                  <span className="h-1.5 w-1.5 rounded-full bg-purple-400 animate-ping" />
+                  CONCOURSE AUDIO & LED SYNC
                 </span>
               </div>
               <p className="text-xs text-slate-400">
-                End-to-end incident management: Stadium Jumbotrons + 48,000+ attendee smartphones
+                Inside stadium speakers, concourse Jumbotrons & attendee smartphone wayfinding
               </p>
             </div>
           </div>
