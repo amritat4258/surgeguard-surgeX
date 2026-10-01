@@ -16,7 +16,6 @@ import { SOSDispatchModal } from '@/components/sos/SOSDispatchModal';
 import { PoliceDispatchModal } from '@/components/government/PoliceDispatchModal';
 import { PublicBroadcastModal } from '@/components/broadcast/PublicBroadcastModal';
 import AttendeeAppModal from '@/components/attendee/AttendeeAppModal';
-import HeatmapReplay from '@/components/replay/HeatmapReplay';
 
 function Dashboard() {
   const {
@@ -70,9 +69,6 @@ function Dashboard() {
           <EventMap />
           <TrendChart />
         </section>
-
-        {/* Historical Crowd Heatmap Replay — always visible below map */}
-        <HeatmapReplay />
 
         <section>
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-400">
