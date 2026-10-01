@@ -17,6 +17,7 @@ import {
   Camera,
   FileText,
   Siren,
+  ShieldAlert,
 } from 'lucide-react';
 import { useCommandCenter } from '@/state/CommandCenterProvider';
 import { getAlertMuted, setAlertMuted } from '@/lib/audioAlert';
@@ -36,6 +37,7 @@ export function ChaosController() {
     activeSOS,
     triggerSOS,
     setIsSOSModalOpen,
+    setIsPoliceModalOpen,
     setSimSpeed,
     reset,
   } = useCommandCenter();
@@ -206,6 +208,16 @@ export function ChaosController() {
               >
                 <FileText className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">Audit Report</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsPoliceModalOpen(true)}
+                title="1-Click Mumbai Police & BMC Disaster Cell Gateway"
+                className="flex items-center gap-1.5 rounded-lg border border-sky-500/40 bg-sky-500/10 px-2.5 py-1 font-mono text-sky-300 hover:bg-sky-500/20 transition"
+              >
+                <ShieldAlert className="h-3.5 w-3.5 text-sky-400" />
+                <span className="hidden sm:inline">Police / BMC</span>
               </button>
 
               <button

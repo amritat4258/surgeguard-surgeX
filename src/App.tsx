@@ -13,6 +13,7 @@ import { RecommendationsPanel } from '@/components/recommendations/Recommendatio
 import { ImpactPanel } from '@/components/impact/ImpactPanel';
 import { ChaosController } from '@/components/telemetry/ChaosController';
 import { SOSDispatchModal } from '@/components/sos/SOSDispatchModal';
+import { PoliceDispatchModal } from '@/components/government/PoliceDispatchModal';
 
 function Dashboard() {
   const {
@@ -23,6 +24,8 @@ function Dashboard() {
     feedStatus,
     isSOSModalOpen,
     setIsSOSModalOpen,
+    isPoliceModalOpen,
+    setIsPoliceModalOpen,
   } = useCommandCenter();
 
   return (
@@ -84,6 +87,12 @@ function Dashboard() {
       <SOSDispatchModal
         isOpen={isSOSModalOpen}
         onClose={() => setIsSOSModalOpen(false)}
+      />
+
+      {/* 1-Click Mumbai Police & BMC Disaster Cell Integration Modal */}
+      <PoliceDispatchModal
+        isOpen={isPoliceModalOpen}
+        onClose={() => setIsPoliceModalOpen(false)}
       />
     </div>
   );

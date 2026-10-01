@@ -122,6 +122,8 @@ interface CommandCenterContextValue {
   activeSOS: SOSBeacon | null;
   isSOSModalOpen: boolean;
   setIsSOSModalOpen: (open: boolean) => void;
+  isPoliceModalOpen: boolean;
+  setIsPoliceModalOpen: (open: boolean) => void;
   triggerSOS: (type: SOSType, zoneId?: ZoneId) => void;
   assignResponder: () => void;
   dispatchParamedics: () => void;
@@ -314,6 +316,7 @@ export function CommandCenterProvider({ children }: { children: ReactNode }) {
 
   const [activeSOS, setActiveSOS] = useState<SOSBeacon | null>(null);
   const [isSOSModalOpen, setIsSOSModalOpen] = useState(false);
+  const [isPoliceModalOpen, setIsPoliceModalOpen] = useState(false);
 
   // Paramedic countdown timer when dispatched
   const activeSOSStatus = activeSOS?.status;
@@ -530,6 +533,8 @@ export function CommandCenterProvider({ children }: { children: ReactNode }) {
     activeSOS,
     isSOSModalOpen,
     setIsSOSModalOpen,
+    isPoliceModalOpen,
+    setIsPoliceModalOpen,
     triggerSOS,
     assignResponder,
     dispatchParamedics,

@@ -55,6 +55,7 @@ export function TopBar() {
     feedStatus,
     activeSOS,
     setIsSOSModalOpen,
+    setIsPoliceModalOpen,
     runSurgeScenario,
     pause,
     resume,
@@ -130,6 +131,20 @@ export function TopBar() {
               READY
             </span>
           )}
+        </button>
+
+        {/* 1-Click Mumbai Police & BMC Disaster Cell Integration Button */}
+        <button
+          type="button"
+          onClick={() => setIsPoliceModalOpen(true)}
+          className="inline-flex items-center gap-1.5 rounded-lg border border-sky-500/40 bg-sky-950/40 px-3 py-2 text-xs font-mono font-bold text-sky-300 hover:bg-sky-900/60 hover:text-white transition hover:scale-105 active:scale-95"
+          title="Open 1-Click Mumbai Police & BMC Disaster Cell Gateway"
+        >
+          <ShieldAlert className="h-4 w-4 text-sky-400" />
+          <span>POLICE / BMC</span>
+          <span className="rounded bg-sky-900/80 border border-sky-400/50 px-1.5 py-0.2 text-[9px] text-sky-200">
+            CAP v1.2
+          </span>
         </button>
 
         {!isLive && status === 'idle' && (

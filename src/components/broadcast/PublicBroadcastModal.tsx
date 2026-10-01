@@ -8,6 +8,8 @@ import {
   ShieldCheck,
   Send,
   Siren,
+  Users,
+  MapPin,
 } from 'lucide-react';
 import { useCommandCenter } from '@/state/CommandCenterProvider';
 
@@ -340,6 +342,46 @@ export function PublicBroadcastModal({ isOpen, onClose }: PublicBroadcastModalPr
                           {zones['gate-c']?.queueMin ?? 2} min (Fast-Track)
                         </span>
                       </div>
+                    </div>
+                  </div>
+
+                  {/* Find My Friends & Safe Meeting Point Card */}
+                  <div className="mt-2.5 rounded-2xl border border-sky-500/40 bg-sky-950/40 p-2.5 shadow-lg space-y-1.5">
+                    <div className="flex items-center justify-between text-[10px] font-bold text-sky-300 font-mono">
+                      <span className="flex items-center gap-1">
+                        <Users className="h-3 w-3 text-sky-400" />
+                        FIND MY FRIENDS (3 CONNECTED)
+                      </span>
+                      <span className="rounded bg-sky-500/20 px-1.5 py-0.2 text-[9px] text-sky-300">
+                        PEER MESH
+                      </span>
+                    </div>
+
+                    <div className="space-y-1 text-[10px] font-mono">
+                      <div className="flex items-center justify-between bg-slate-900/70 p-1.5 rounded-lg border border-slate-800">
+                        <div className="flex items-center gap-1.5 text-slate-200">
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                          <span>Rahul M.</span>
+                        </div>
+                        <span className="text-slate-400">14m · Food Court</span>
+                      </div>
+                      <div className="flex items-center justify-between bg-slate-900/70 p-1.5 rounded-lg border border-slate-800">
+                        <div className="flex items-center gap-1.5 text-slate-200">
+                          <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+                          <span>Priya K.</span>
+                        </div>
+                        <span className="text-amber-300">38m · Arena East</span>
+                      </div>
+                    </div>
+
+                    <div className="p-1.5 rounded-lg bg-sky-900/30 border border-sky-500/30 text-[10px]">
+                      <div className="flex items-center gap-1 text-sky-300 font-bold font-mono">
+                        <MapPin className="h-3 w-3 text-sky-400 shrink-0" />
+                        <span>Safe Meeting Point:</span>
+                      </div>
+                      <p className="text-[9.5px] text-slate-300 mt-0.5">
+                        <b>Water Point #2 (Near Gate C)</b> · Low Density (&lt;1.4 p/m²) · Egress Clear
+                      </p>
                     </div>
                   </div>
 
