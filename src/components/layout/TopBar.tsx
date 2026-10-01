@@ -54,6 +54,7 @@ export function TopBar() {
     mode,
     feedStatus,
     activeSOS,
+    setIsSOSModalOpen,
     runSurgeScenario,
     pause,
     resume,
@@ -81,10 +82,14 @@ export function TopBar() {
       {/* Status + clock */}
       <div className="flex items-center gap-4">
         {activeSOS && (
-          <span className="flex items-center gap-1.5 rounded-full border border-rose-500/80 bg-rose-600/25 px-3 py-1 font-mono text-xs font-bold text-rose-300 animate-pulse shadow-md shadow-rose-600/30">
+          <button
+            type="button"
+            onClick={() => setIsSOSModalOpen(true)}
+            className="flex items-center gap-1.5 rounded-full border border-rose-500/80 bg-rose-600/25 px-3 py-1 font-mono text-xs font-bold text-rose-300 animate-pulse shadow-md shadow-rose-600/30 hover:bg-rose-600/40 transition"
+          >
             <Siren className="h-3.5 w-3.5 text-rose-400 animate-spin" style={{ animationDuration: '3s' }} />
             <span>SOS: {activeSOS.type.replace('-', ' ').toUpperCase()}</span>
-          </span>
+          </button>
         )}
         <span
           className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold tracking-wide ${look.cls}`}
@@ -103,6 +108,30 @@ export function TopBar() {
 
       {/* Controls */}
       <div className="flex items-center gap-2">
+        {/* Dedicated Standalone SOS Hub Button */}
+        <button
+          type="button"
+          onClick={() => setIsSOSModalOpen(true)}
+          className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-mono font-bold transition hover:scale-105 active:scale-95 ${
+            activeSOS
+              ? 'border-rose-500 bg-rose-600 text-white shadow-[0_0_20px_rgba(244,63,94,0.6)] animate-pulse'
+              : 'border-rose-500/40 bg-rose-950/40 text-rose-300 hover:bg-rose-900/60 hover:text-white'
+          }`}
+          title="Open Standalone Emergency SOS Hub"
+        >
+          <Siren className={`h-4 w-4 ${activeSOS ? 'animate-spin' : 'text-rose-400'}`} style={{ animationDuration: '3s' }} />
+          <span>SOS HUB</span>
+          {activeSOS ? (
+            <span className="rounded bg-rose-950/90 border border-rose-300 px-1.5 py-0.2 text-[9px] font-mono text-rose-200">
+              {activeSOS.status.toUpperCase()}
+            </span>
+          ) : (
+            <span className="rounded bg-slate-800 px-1.5 py-0.2 text-[9px] font-mono text-slate-400">
+              READY
+            </span>
+          )}
+        </button>
+
         {!isLive && status === 'idle' && (
           <button
             onClick={runSurgeScenario}

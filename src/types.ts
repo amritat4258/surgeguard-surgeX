@@ -126,8 +126,42 @@ export type DataMode = 'sim' | 'live';
 
 // ── Attendee Emergency SOS ──────────────────────────────────────────
 
-export type SOSType = 'faint' | 'breathing' | 'crush' | 'injury';
-export type SOSStatus = 'active' | 'dispatched' | 'resolved';
+export type SOSType =
+  | 'medical'
+  | 'fire'
+  | 'lost_child'
+  | 'harassment'
+  | 'faint'
+  | 'breathing'
+  | 'crush'
+  | 'injury';
+
+export type SOSStatus =
+  | 'received'
+  | 'assigned'
+  | 'dispatched'
+  | 'resolved'
+  | 'active'; // backward compatible
+
+export interface SOSResponder {
+  id: string;
+  name: string;
+  role: string;
+  unit: string;
+  phone: string;
+  avatar: string;
+  location: string;
+  etaSeconds: number;
+}
+
+export interface CrowdAwareRoute {
+  avoidZoneId: ZoneId;
+  avoidZoneName: string;
+  densityAvoided: number; // e.g. 4.4 p/m²
+  detourName: string; // e.g. "West Auxiliary Walkway"
+  timeSavedMinutes: number; // e.g. 3.5
+  waypoints: { x: number; y: number }[];
+}
 
 export interface SOSBeacon {
   id: string;
@@ -143,6 +177,10 @@ export interface SOSBeacon {
   nearestMedName: string;
   etaSeconds: number;
   coordinates: { x: number; y: number };
+  responder?: SOSResponder;
+  crowdRoute?: CrowdAwareRoute;
+  nearbyVolunteersNotified?: number;
+  calmMessageSent?: boolean;
 }
 
 

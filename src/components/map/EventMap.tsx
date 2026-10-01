@@ -6,8 +6,8 @@ import {
   Layers,
   Info,
   Siren,
+  ShieldCheck,
 } from 'lucide-react';
-import { SOSDispatchModal } from '@/components/sos/SOSDispatchModal';
 
 interface NodeBox {
   x: number; // center x
@@ -230,10 +230,9 @@ const legend: { label: string; cls: string }[] = [
 ];
 
 export function EventMap() {
-  const { zones, predictions, execution, mode, activeSOS } = useCommandCenter();
+  const { zones, predictions, execution, mode, activeSOS, setIsSOSModalOpen } = useCommandCenter();
   const [facilityFilter, setFacilityFilter] = useState<FacilityKind>('all');
   const [selectedFacility, setSelectedFacility] = useState<VenueFacility | null>(null);
-  const [isSOSModalOpen, setIsSOSModalOpen] = useState(false);
 
   // Filter facilities based on active amenity tab
   const activeFacilities = facilityFilter === 'all'
@@ -261,7 +260,7 @@ export function EventMap() {
   return (
     <div className="rounded-xl border border-surface-border bg-surface-panel p-4 relative overflow-hidden flex flex-col justify-between">
       {/* Venue Header & Legend */}
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+      <div className="mb-2.5 flex flex-wrap items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
             <h2 className="text-sm font-semibold uppercase tracking-wide text-white flex items-center gap-1.5">
@@ -294,6 +293,27 @@ export function EventMap() {
               {l.label}
             </span>
           ))}
+        </div>
+      </div>
+
+      {/* CCTV + GPS Sensor Fusion & Privacy-by-Design Bar */}
+      <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-800 bg-slate-900/60 px-3 py-1.5 text-[11px] font-mono">
+        <div className="flex flex-wrap items-center gap-2.5">
+          <span className="flex items-center gap-1.5 text-slate-200 font-bold">
+            <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+            CCTV + GPS FUSION:
+          </span>
+          <span className="text-slate-400">
+            Gate A: <span className="text-sky-300">CCTV 3,420</span> / <span className="text-emerald-300">GPS 2,680</span> · Confidence: <span className="text-emerald-400 font-bold">96.4%</span>
+          </span>
+          <span className="text-slate-400 hidden lg:inline">
+            Gate B: <span className="text-sky-300">CCTV 4,890</span> / <span className="text-emerald-300">GPS 3,910</span> · Confidence: <span className="text-emerald-400 font-bold">94.1%</span>
+          </span>
+        </div>
+        <div className="flex items-center gap-1.5 text-slate-400">
+          <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
+          <span className="text-slate-300 font-semibold">Privacy-by-Design</span>
+          <span className="text-[10px] text-slate-400">(Zero PII · Aggregated Zone Mesh)</span>
         </div>
       </div>
 
@@ -707,17 +727,49 @@ export function EventMap() {
               onClick={() => setIsSOSModalOpen(true)}
               filter="url(#neon-glow-map)"
             >
-              {/* Paramedic response vector line from First Aid Post (m2: 515, 110) to beacon */}
-              <line
-                x1={515}
-                y1={110}
-                x2={activeSOS.coordinates.x}
-                y2={activeSOS.coordinates.y}
-                stroke="#f43f5e"
-                strokeWidth={3}
-                strokeDasharray="6 4"
-                className="animate-pulse"
-              />
+              {/* Paramedic response vector line (with Smart Crowd-Aware Detour if available) */}
+              {activeSOS.crowdRoute ? (
+                <>
+                  {/* Avoided congested direct path (dashed red, high density chokepoint) */}
+                  <line
+                    x1={515}
+                    y1={110}
+                    x2={activeSOS.coordinates.x}
+                    y2={activeSOS.coordinates.y}
+                    stroke="#ef4444"
+                    strokeWidth={1.5}
+                    strokeDasharray="3 3"
+                    opacity={0.35}
+                  />
+                  {/* Smart Detour path (curved cyan glowing line bypassing chokepoint) */}
+                  <path
+                    d={`M 515 110 Q 565 65 ${activeSOS.coordinates.x} ${activeSOS.coordinates.y}`}
+                    fill="none"
+                    stroke="#38bdf8"
+                    strokeWidth={3}
+                    strokeDasharray="6 3"
+                    className="animate-pulse"
+                  />
+                  {/* Detour Badge */}
+                  <g transform={`translate(${555}, ${70})`}>
+                    <rect x={-60} y={-9} width={120} height={14} rx={3} fill="#082f49" stroke="#38bdf8" strokeWidth={1} />
+                    <text x={0} y={1} textAnchor="middle" fill="#7dd3fc" fontFamily="monospace" fontSize={7.5} fontWeight="bold">
+                      SMART DETOUR (-3.5 MIN)
+                    </text>
+                  </g>
+                </>
+              ) : (
+                <line
+                  x1={515}
+                  y1={110}
+                  x2={activeSOS.coordinates.x}
+                  y2={activeSOS.coordinates.y}
+                  stroke="#f43f5e"
+                  strokeWidth={3}
+                  strokeDasharray="6 4"
+                  className="animate-pulse"
+                />
+              )}
 
               {/* Pulsing Radar Ring (SOS shockwave) */}
               <circle
@@ -834,12 +886,6 @@ export function EventMap() {
         </span>
         <span>MMRDA VENUE GRID // BKC SECTOR 4</span>
       </div>
-
-      {/* Attendee SOS Emergency Dispatch Console Modal */}
-      <SOSDispatchModal
-        isOpen={isSOSModalOpen}
-        onClose={() => setIsSOSModalOpen(false)}
-      />
     </div>
   );
 }

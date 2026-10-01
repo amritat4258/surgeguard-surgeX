@@ -12,9 +12,18 @@ import { AlertsPanel } from '@/components/alerts/AlertsPanel';
 import { RecommendationsPanel } from '@/components/recommendations/RecommendationsPanel';
 import { ImpactPanel } from '@/components/impact/ImpactPanel';
 import { ChaosController } from '@/components/telemetry/ChaosController';
+import { SOSDispatchModal } from '@/components/sos/SOSDispatchModal';
 
 function Dashboard() {
-  const { zoneList, predictions, mode, hasData, feedStatus } = useCommandCenter();
+  const {
+    zoneList,
+    predictions,
+    mode,
+    hasData,
+    feedStatus,
+    isSOSModalOpen,
+    setIsSOSModalOpen,
+  } = useCommandCenter();
 
   return (
     <div className="min-h-screen bg-surface-base font-body text-slate-100">
@@ -70,6 +79,12 @@ function Dashboard() {
 
       {/* Floating Chaos Controller & Live Telemetry Inspector */}
       <ChaosController />
+
+      {/* Standalone SOS Emergency Operations Hub Modal */}
+      <SOSDispatchModal
+        isOpen={isSOSModalOpen}
+        onClose={() => setIsSOSModalOpen(false)}
+      />
     </div>
   );
 }

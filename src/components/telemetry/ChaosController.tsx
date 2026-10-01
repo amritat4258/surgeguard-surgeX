@@ -35,6 +35,7 @@ export function ChaosController() {
     triggerChaos,
     activeSOS,
     triggerSOS,
+    setIsSOSModalOpen,
     setSimSpeed,
     reset,
   } = useCommandCenter();
@@ -161,6 +162,20 @@ export function ChaosController() {
                 }`}
               >
                 {isMuted ? <VolumeX className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsSOSModalOpen(true)}
+                title="Open Standalone Emergency SOS Operations & Dispatch Hub"
+                className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1 font-mono transition ${
+                  activeSOS
+                    ? 'border-rose-500 bg-rose-600 text-white shadow-[0_0_15px_rgba(244,63,94,0.5)] animate-pulse'
+                    : 'border-rose-500/40 bg-rose-500/10 text-rose-300 hover:bg-rose-500/20'
+                }`}
+              >
+                <Siren className={`h-3.5 w-3.5 ${activeSOS ? 'animate-spin' : 'text-rose-400'}`} style={{ animationDuration: '3s' }} />
+                <span className="hidden sm:inline">SOS Hub</span>
               </button>
 
               <button

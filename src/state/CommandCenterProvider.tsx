@@ -120,8 +120,12 @@ interface CommandCenterContextValue {
   triggerChaos: (type: 'turnstile_fail' | 'weather_rush') => void;
   setSimSpeed: (multiplier: number) => void;
   activeSOS: SOSBeacon | null;
+  isSOSModalOpen: boolean;
+  setIsSOSModalOpen: (open: boolean) => void;
   triggerSOS: (type: SOSType, zoneId?: ZoneId) => void;
+  assignResponder: () => void;
   dispatchParamedics: () => void;
+  sendCalmBroadcast: () => void;
   resolveSOS: () => void;
   pause: () => void;
   resume: () => void;
@@ -309,6 +313,7 @@ export function CommandCenterProvider({ children }: { children: ReactNode }) {
   }, [mode, feedSend]);
 
   const [activeSOS, setActiveSOS] = useState<SOSBeacon | null>(null);
+  const [isSOSModalOpen, setIsSOSModalOpen] = useState(false);
 
   // Paramedic countdown timer when dispatched
   const activeSOSStatus = activeSOS?.status;
@@ -328,12 +333,123 @@ export function CommandCenterProvider({ children }: { children: ReactNode }) {
 
   const triggerSOS = useCallback((type: SOSType, targetZoneId: ZoneId = 'gate-b') => {
     const z = state.zones[targetZoneId] || state.zones['gate-b'];
-    const labels: Record<SOSType, { label: string; desc: string }> = {
-      faint: { label: 'Attendee Fainted / Unconscious', desc: 'Severe heat exhaustion, non-responsive, acute dehydration' },
-      breathing: { label: 'Acute Breathing Difficulty', desc: 'Asthma/hyperventilation in high density crowd sector' },
-      crush: { label: 'Crowd Crush Hazard / Trapped', desc: 'Barricade crush distress signal received' },
-      injury: { label: 'Severe Physical Trauma', desc: 'Laceration / fall injury requiring stretcher' },
+
+    const labels: Record<SOSType, { label: string; desc: string; responder: SOSBeacon['responder'] }> = {
+      medical: {
+        label: 'Medical Emergency / Unconscious',
+        desc: 'Attendee collapsed due to acute heat, dehydration, and high crowd pressure.',
+        responder: {
+          id: 'RESP-MED-01',
+          name: 'EMT Dr. Priya Sharma & Team Alpha-4',
+          role: 'Emergency Medical Technician',
+          unit: 'First Aid Tent Bravo (Sector 2)',
+          phone: '+91 98201 44921',
+          avatar: '🚑',
+          location: 'Tent Bravo (28m away)',
+          etaSeconds: 28,
+        },
+      },
+      fire: {
+        label: 'Pyrotechnic Fire / Smoke Flash',
+        desc: 'Stage pyrotechnics flare ignited near East corridor truss. Smoke hazard detected.',
+        responder: {
+          id: 'RESP-FIRE-02',
+          name: 'Lead Inspector Vikram Patil',
+          role: 'Rapid Fire Suppression Team F-2',
+          unit: 'East Hydrant & CO2 Extinguisher Post',
+          phone: '+91 98202 88123',
+          avatar: '🚒',
+          location: 'East Perimeter Hydrant (38m away)',
+          etaSeconds: 35,
+        },
+      },
+      lost_child: {
+        label: 'Lost Child / Family Separation',
+        desc: '7-year-old child separated from guardian at crowded concourse. Wearing blue cap, white shirt.',
+        responder: {
+          id: 'RESP-SEC-03',
+          name: 'Officer Sunita Rane',
+          role: 'Child Safety & Reunification Patrol S-1',
+          unit: 'Central Guest Relations Hub',
+          phone: '+91 98203 11984',
+          avatar: '👮‍♀️',
+          location: 'Central Safety Desk (30m away)',
+          etaSeconds: 22,
+        },
+      },
+      harassment: {
+        label: 'Harassment / Safety Disturbance',
+        desc: 'Bystander reported persistent harassment and physical aggression in dense crowd queue.',
+        responder: {
+          id: 'RESP-MARSHAL-04',
+          name: 'Marshall Arjun Desai & Squad M-3',
+          role: 'Tactical Venue Safety & Marshall',
+          unit: 'Plainclothes Rapid Intervention Squad',
+          phone: '+91 98204 77332',
+          avatar: '🛡️',
+          location: 'Arena Sector B Rim (18m away)',
+          etaSeconds: 20,
+        },
+      },
+      faint: {
+        label: 'Attendee Fainted / Unconscious',
+        desc: 'Severe heat exhaustion, non-responsive, acute dehydration.',
+        responder: {
+          id: 'RESP-MED-01',
+          name: 'EMT Dr. Priya Sharma & Team Alpha-4',
+          role: 'Emergency Medical Technician',
+          unit: 'First Aid Tent Bravo (Sector 2)',
+          phone: '+91 98201 44921',
+          avatar: '🚑',
+          location: 'Tent Bravo (28m away)',
+          etaSeconds: 28,
+        },
+      },
+      breathing: {
+        label: 'Acute Breathing Difficulty',
+        desc: 'Asthma/hyperventilation in high density crowd sector.',
+        responder: {
+          id: 'RESP-MED-01',
+          name: 'EMT Dr. Priya Sharma & Team Alpha-4',
+          role: 'Emergency Medical Technician',
+          unit: 'First Aid Tent Bravo (Sector 2)',
+          phone: '+91 98201 44921',
+          avatar: '🚑',
+          location: 'Tent Bravo (28m away)',
+          etaSeconds: 28,
+        },
+      },
+      crush: {
+        label: 'Crowd Crush Hazard / Trapped',
+        desc: 'Barricade crush distress signal received.',
+        responder: {
+          id: 'RESP-MED-01',
+          name: 'EMT Dr. Priya Sharma & Team Alpha-4',
+          role: 'Emergency Medical Technician',
+          unit: 'First Aid Tent Bravo (Sector 2)',
+          phone: '+91 98201 44921',
+          avatar: '🚑',
+          location: 'Tent Bravo (28m away)',
+          etaSeconds: 28,
+        },
+      },
+      injury: {
+        label: 'Severe Physical Trauma',
+        desc: 'Laceration / fall injury requiring stretcher.',
+        responder: {
+          id: 'RESP-MED-01',
+          name: 'EMT Dr. Priya Sharma & Team Alpha-4',
+          role: 'Emergency Medical Technician',
+          unit: 'First Aid Tent Bravo (Sector 2)',
+          phone: '+91 98201 44921',
+          avatar: '🚑',
+          location: 'Tent Bravo (28m away)',
+          etaSeconds: 28,
+        },
+      },
     };
+
+    const info = labels[type] || labels.medical;
 
     const beacon: SOSBeacon = {
       id: `SOS-${Math.floor(100 + Math.random() * 900)}`,
@@ -341,22 +457,46 @@ export function CommandCenterProvider({ children }: { children: ReactNode }) {
       zoneId: z.id,
       zoneName: z.name,
       type,
-      label: labels[type].label,
-      description: labels[type].desc,
+      label: info.label,
+      description: info.desc,
       callerPhone: `+91 9820${Math.floor(100000 + Math.random() * 900000)}`,
-      status: 'active',
+      status: 'received',
       nearestMedId: 'm2',
       nearestMedName: 'First Aid Tent Bravo (Gate B/C Sector)',
-      etaSeconds: 45,
+      etaSeconds: info.responder?.etaSeconds ?? 28,
       coordinates: targetZoneId === 'gate-b' ? { x: 630, y: 145 } : { x: 380, y: 240 },
+      responder: info.responder,
+      crowdRoute: {
+        avoidZoneId: 'gate-b',
+        avoidZoneName: 'Gate B Concourse Chokepoint',
+        densityAvoided: 4.4,
+        detourName: 'North-West Auxiliary Service Alley',
+        timeSavedMinutes: 3.5,
+        waypoints: [
+          { x: 515, y: 110 },
+          { x: 570, y: 90 },
+          { x: 630, y: 145 },
+        ],
+      },
+      nearbyVolunteersNotified: 6,
+      calmMessageSent: false,
     };
 
     setActiveSOS(beacon);
+    setIsSOSModalOpen(true);
     playEmergencyAlertSound();
   }, [state.zones]);
 
+  const assignResponder = useCallback(() => {
+    setActiveSOS((prev) => (prev ? { ...prev, status: 'assigned' } : null));
+  }, []);
+
   const dispatchParamedics = useCallback(() => {
-    setActiveSOS((prev) => (prev ? { ...prev, status: 'dispatched', etaSeconds: 35 } : null));
+    setActiveSOS((prev) => (prev ? { ...prev, status: 'dispatched', etaSeconds: 28 } : null));
+  }, []);
+
+  const sendCalmBroadcast = useCallback(() => {
+    setActiveSOS((prev) => (prev ? { ...prev, calmMessageSent: true } : null));
   }, []);
 
   const resolveSOS = useCallback(() => {
@@ -388,8 +528,12 @@ export function CommandCenterProvider({ children }: { children: ReactNode }) {
     triggerChaos,
     setSimSpeed,
     activeSOS,
+    isSOSModalOpen,
+    setIsSOSModalOpen,
     triggerSOS,
+    assignResponder,
     dispatchParamedics,
+    sendCalmBroadcast,
     resolveSOS,
     pause: () => dispatch({ type: 'PAUSE' }),
     resume: () => dispatch({ type: 'RESUME' }),

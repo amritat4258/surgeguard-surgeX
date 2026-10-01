@@ -359,31 +359,31 @@ export function PublicBroadcastModal({ isOpen, onClose }: PublicBroadcastModalPr
                     <div className="grid grid-cols-2 gap-1.5 text-[9px] font-mono">
                       <button
                         type="button"
-                        onClick={() => triggerSOS('faint', 'gate-b')}
+                        onClick={() => triggerSOS('medical', 'gate-b')}
                         className="rounded-lg border border-rose-500/40 bg-rose-600/80 p-1.5 font-bold text-white hover:bg-rose-500 transition text-left"
                       >
-                        😵 Fainted / Heat
+                        🩺 Medical / Fainted
                       </button>
                       <button
                         type="button"
-                        onClick={() => triggerSOS('breathing', 'gate-b')}
-                        className="rounded-lg border border-rose-500/40 bg-rose-600/80 p-1.5 font-bold text-white hover:bg-rose-500 transition text-left"
+                        onClick={() => triggerSOS('fire', 'gate-b')}
+                        className="rounded-lg border border-amber-500/40 bg-amber-600/80 p-1.5 font-bold text-white hover:bg-amber-500 transition text-left"
                       >
-                        🫀 Breathing Issue
+                        🔥 Fire / Smoke
                       </button>
                       <button
                         type="button"
-                        onClick={() => triggerSOS('crush', 'gate-b')}
-                        className="rounded-lg border border-rose-600/50 bg-rose-700 p-1.5 font-bold text-white hover:bg-rose-600 transition text-left"
+                        onClick={() => triggerSOS('lost_child', 'gate-b')}
+                        className="rounded-lg border border-sky-600/50 bg-sky-700 p-1.5 font-bold text-white hover:bg-sky-600 transition text-left"
                       >
-                        🆘 Crowd Crush Trap
+                        👶 Lost Child
                       </button>
                       <button
                         type="button"
-                        onClick={() => triggerSOS('injury', 'gate-b')}
-                        className="rounded-lg border border-rose-600/50 bg-rose-700 p-1.5 font-bold text-white hover:bg-rose-600 transition text-left"
+                        onClick={() => triggerSOS('harassment', 'gate-b')}
+                        className="rounded-lg border border-purple-600/50 bg-purple-700 p-1.5 font-bold text-white hover:bg-purple-600 transition text-left"
                       >
-                        🤕 Severe Injury
+                        🛡️ Harassment
                       </button>
                     </div>
                   </div>
