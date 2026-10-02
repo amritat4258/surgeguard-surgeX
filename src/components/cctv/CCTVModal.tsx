@@ -112,8 +112,6 @@ export function CCTVModal({ isOpen, onClose, initialZoneId = 'gate-b' }: CCTVMod
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const pedestriansRef = useRef<InternalPedestrian[]>([]);
   const frameCountRef = useRef(0);
-  const offCanvasRef = useRef<HTMLCanvasElement | null>(null);
-  const prevVideoDataRef = useRef<Uint8ClampedArray | null>(null);
 
   // Sync selected camera if initialZoneId changes when modal opens
   useEffect(() => {
@@ -285,91 +283,37 @@ export function CCTVModal({ isOpen, onClose, initialZoneId = 'gate-b' }: CCTVMod
         videoRef.current &&
         videoRef.current.readyState >= 2;
 
-      // ── STEP 1: RENDER VIDEO BACKGROUND & REAL COMPUTER VISION TRACKER ───
+      // ── STEP 1: RENDER VIDEO BACKGROUND OR SYNTHETIC SURVEILLANCE GENERATOR ───
       if (hasActiveVideo && videoRef.current) {
-        // 1a. Draw real CCTV video frame (0:10 to 0:17), custom uploaded video, or webcam
+        // Draw real CCTV video frame (0:10 to 0:17), custom uploaded video, or webcam
         ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
 
-        // 1b. Real Pixel Motion & Pedestrian Detection on Video Frames
-        if (!offCanvasRef.current) {
-          const oc = document.createElement('canvas');
-          oc.width = 160;
-          oc.height = 90;
-          offCanvasRef.current = oc;
-        }
+        // Update pedestrian motion for tracking overlay across the video
+        const peds = pedestriansRef.current;
+        const horizonY = canvas.height * 0.18;
+        for (const p of peds) {
+          if (isPlaying) {
+            p.y += p.vy;
+            p.x += p.vx;
 
-        const oc = offCanvasRef.current;
-        const octx = oc.getContext('2d', { willReadFrequently: true });
+            // Boundary bounce
+            if (p.x < 50) { p.x = 50; p.vx *= -1; }
+            if (p.x > canvas.width - 50) { p.x = canvas.width - 50; p.vx *= -1; }
 
-        if (octx && frameCountRef.current % 2 === 0) {
-          octx.drawImage(videoRef.current, 0, 0, 160, 90);
-          const imgData = octx.getImageData(0, 0, 160, 90);
-          const data = imgData.data;
-
-          if (prevVideoDataRef.current) {
-            const prev = prevVideoDataRef.current;
-            const gridW = 16;
-            const gridH = 9;
-            const cellW = 160 / gridW;
-            const cellH = 90 / gridH;
-            const cellMotion = new Float32Array(gridW * gridH);
-
-            for (let y = 0; y < 90; y++) {
-              const gy = Math.floor(y / cellH);
-              for (let x = 0; x < 160; x++) {
-                const gx = Math.floor(x / cellW);
-                const idx = (y * 160 + x) * 4;
-                const diff =
-                  Math.abs(data[idx] - prev[idx]) +
-                  Math.abs(data[idx + 1] - prev[idx + 1]) +
-                  Math.abs(data[idx + 2] - prev[idx + 2]);
-
-                if (diff > 28) {
-                  cellMotion[gy * gridW + gx] += diff;
-                }
-              }
-            }
-
-            const detectedMotionClusters: { cx: number; cy: number; w: number; h: number; energy: number }[] = [];
-            for (let gy = 0; gy < gridH; gy++) {
-              for (let gx = 0; gx < gridW; gx++) {
-                const energy = cellMotion[gy * gridW + gx];
-                if (energy > 220) {
-                  const cx = (gx + 0.5) * cellW * (canvas.width / 160);
-                  const cy = (gy + 0.5) * cellH * (canvas.height / 90);
-                  const bw = cellW * (canvas.width / 160) * 1.5;
-                  const bh = cellH * (canvas.height / 90) * 2.2;
-                  detectedMotionClusters.push({ cx, cy, w: bw, h: bh, energy });
-                }
-              }
-            }
-
-            if (detectedMotionClusters.length >= 2) {
-              const updatedPeds: InternalPedestrian[] = detectedMotionClusters.slice(0, 24).map((c, i) => {
-                const existing = pedestriansRef.current[i];
-                const vx = existing ? (c.cx - existing.x) * 0.35 : (Math.random() - 0.5) * 1.2;
-                const vy = existing ? (c.cy - existing.y) * 0.35 : 0.8;
-                return {
-                  id: 101 + i,
-                  x: existing ? existing.x + (c.cx - existing.x) * 0.45 : c.cx,
-                  y: existing ? existing.y + (c.cy - existing.y) * 0.45 : c.cy,
-                  vx,
-                  vy,
-                  targetX: c.cx,
-                  targetY: c.cy,
-                  boxW: c.w,
-                  boxH: c.h,
-                  conf: Math.min(0.99, 0.92 + (c.energy / 4000) * 0.07),
-                  risk: Math.hypot(vx, vy) > 2.8 ? 'warning' : 'normal',
-                  lane: Math.floor(c.cx / (canvas.width / 4)),
-                  speed: Math.hypot(vx, vy),
-                  color: '#38bdf8',
-                };
-              });
-              pedestriansRef.current = updatedPeds;
+            // Loop back to top once passed turnstile
+            if (p.y > canvas.height + 40) {
+              p.y = horizonY + 10;
+              p.x = 70 + Math.random() * (canvas.width - 140);
+              p.vy = (0.9 + Math.random() * 1.5) * (risk === 'critical' ? 1.6 : 1.1);
             }
           }
-          prevVideoDataRef.current = new Uint8ClampedArray(data);
+
+          // Depth scaling
+          const depth = Math.max(0.4, (p.y - horizonY) / (canvas.height - horizonY));
+          const w = 18 * depth;
+          const h = 42 * depth;
+          p.boxW = w * 1.5;
+          p.boxH = h * 1.25;
         }
       } else {
         // ── SYNTHETIC HIGH-DEF SURVEILLANCE VIDEO GENERATOR ────────────────
@@ -554,7 +498,8 @@ export function CCTVModal({ isOpen, onClose, initialZoneId = 'gate-b' }: CCTVMod
         const bx = p.x - p.boxW / 2;
         const by = p.y - p.boxH / 2;
 
-        if (showBoxes) {
+        const isTracked = hasActiveVideo ? i < 14 : true;
+        if (showBoxes && isTracked) {
           // Bounding Box
           ctx.strokeStyle = boxColor;
           ctx.lineWidth = 1.8;
