@@ -180,7 +180,7 @@ export function PoliceDispatchModal({ isOpen, onClose }: PoliceDispatchModalProp
                   CAP v1.2 / NDMA PROTOCOL
                 </span>
               </div>
-              <h3 className="font-display text-base font-bold text-white">
+              <h3 className="font-display text-base font-bold text-ink">
                 1-Click Municipal & Law Enforcement Interoperability
               </h3>
             </div>
@@ -189,7 +189,7 @@ export function PoliceDispatchModal({ isOpen, onClose }: PoliceDispatchModalProp
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white transition"
+            className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-ink transition"
           >
             <X className="h-5 w-5" />
           </button>
@@ -204,7 +204,7 @@ export function PoliceDispatchModal({ isOpen, onClose }: PoliceDispatchModalProp
                 <Car className="h-4 w-4" />
               </span>
               <div>
-                <h5 className="font-bold text-white">Mumbai Police Traffic</h5>
+                <h5 className="font-bold text-ink">Mumbai Police Traffic</h5>
                 <p className="text-[10px] text-slate-400">BKC Arterial Signals</p>
                 <span className="text-[9px] text-emerald-400 font-bold flex items-center gap-1 mt-0.5">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping" />
@@ -218,7 +218,7 @@ export function PoliceDispatchModal({ isOpen, onClose }: PoliceDispatchModalProp
                 <Building2 className="h-4 w-4" />
               </span>
               <div>
-                <h5 className="font-bold text-white">BMC Disaster Cell</h5>
+                <h5 className="font-bold text-ink">BMC Disaster Cell</h5>
                 <p className="text-[10px] text-slate-400">Ward H-East EOC</p>
                 <span className="text-[9px] text-emerald-400 font-bold flex items-center gap-1 mt-0.5">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
@@ -232,7 +232,7 @@ export function PoliceDispatchModal({ isOpen, onClose }: PoliceDispatchModalProp
                 <Ambulance className="h-4 w-4" />
               </span>
               <div>
-                <h5 className="font-bold text-white">108 EMS Ambulance</h5>
+                <h5 className="font-bold text-ink">108 EMS Ambulance</h5>
                 <p className="text-[10px] text-slate-400">Lilavati / Bhabha Hospital</p>
                 <span className="text-[9px] text-sky-400 font-bold flex items-center gap-1 mt-0.5">
                   <span className="h-1.5 w-1.5 rounded-full bg-sky-400" />
@@ -354,7 +354,7 @@ export function PoliceDispatchModal({ isOpen, onClose }: PoliceDispatchModalProp
 
             {/* Path flow breadcrumb */}
             <div className="flex flex-wrap items-center gap-2 text-[11px] font-mono text-slate-300 bg-slate-950/80 p-2.5 rounded-lg border border-slate-800">
-              <span className="font-bold text-white">MMRDA Gate 2</span>
+              <span className="font-bold text-ink">MMRDA Gate 2</span>
               <ArrowRight className="h-3 w-3 text-emerald-400 shrink-0" />
               <span className="text-slate-300">BKC Connector</span>
               <ArrowRight className="h-3 w-3 text-emerald-400 shrink-0" />
@@ -516,7 +516,7 @@ export function PoliceDispatchModal({ isOpen, onClose }: PoliceDispatchModalProp
               <button
                 type="button"
                 onClick={() => setShowJsonPayload((prev) => !prev)}
-                className="flex items-center gap-2 text-xs font-mono text-slate-300 hover:text-white transition"
+                className="flex items-center gap-2 text-xs font-mono text-slate-300 hover:text-ink transition"
               >
                 <Code className="h-4 w-4 text-sky-400" />
                 <span>View Raw CAP v1.2 Government JSON Payload (For Technical Evaluation)</span>

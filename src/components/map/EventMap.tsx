@@ -120,7 +120,7 @@ export function EventMap() {
       <div className="mb-2.5 flex flex-wrap items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-white flex items-center gap-1.5">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-ink flex items-center gap-1.5">
               <MapPin className="h-4 w-4 text-rose-400" />
               MMRDA Grounds, BKC (Mumbai)
             </h2>
@@ -207,7 +207,7 @@ export function EventMap() {
           onClick={() => setFacilityFilter('all')}
           className={`rounded-md px-2.5 py-1 font-mono text-[11px] font-semibold transition ${
             facilityFilter === 'all'
-              ? 'bg-slate-700 text-white shadow-sm'
+              ? 'bg-slate-700 text-ink shadow-sm'
               : 'text-slate-400 hover:text-slate-200'
           }`}
         >
@@ -301,8 +301,8 @@ export function EventMap() {
         </div>
       )}
 
-      {/* SVG Map Canvas */}
-      <div className="relative">
+      {/* SVG Map Canvas (kept dark in both themes) */}
+      <div data-theme="dark" className="relative overflow-hidden rounded-xl bg-slate-950">
         <svg viewBox="0 0 800 530" className="h-auto w-full select-none">
           <defs>
             <style>{`
@@ -776,7 +776,7 @@ export function EventMap() {
                   {selectedFacility.icon}
                 </span>
                 <div className="min-w-0">
-                  <h4 className="font-bold text-sm text-white leading-tight truncate">
+                  <h4 className="font-bold text-sm text-ink leading-tight truncate">
                     {selectedFacility.name}
                   </h4>
                   <div className="mt-1 flex flex-wrap items-center gap-1.5">
@@ -805,7 +805,7 @@ export function EventMap() {
                 <button
                   type="button"
                   onClick={() => setSelectedFacility(null)}
-                  className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-700 hover:text-white transition text-sm"
+                  className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-700 hover:text-ink transition text-sm"
                 >
                   ✕
                 </button>
@@ -836,7 +836,7 @@ export function EventMap() {
                       <div className="flex items-center gap-1 text-xs text-slate-400 mb-1">
                         <Users className="h-3 w-3 shrink-0" /> In Queue
                       </div>
-                      <p className="font-mono text-base font-black text-white leading-none">
+                      <p className="font-mono text-base font-black text-ink leading-none">
                         {selectedFacility.queueCount}
                       </p>
                     </div>

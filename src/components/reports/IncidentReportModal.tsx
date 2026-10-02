@@ -35,7 +35,7 @@ export function IncidentReportModal({ isOpen, onClose }: IncidentReportModalProp
         <div className="flex items-center justify-between border-b border-slate-800 bg-slate-900/70 px-6 py-4 print:hidden">
           <div className="flex items-center gap-2">
             <FileText className="h-5 w-5 text-info" />
-            <h2 className="font-display text-base font-bold text-white tracking-wide">
+            <h2 className="font-display text-base font-bold text-ink tracking-wide">
               Official Incident Post-Mortem & Regulatory Compliance Audit
             </h2>
           </div>
@@ -52,7 +52,7 @@ export function IncidentReportModal({ isOpen, onClose }: IncidentReportModalProp
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white transition"
+              className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-ink transition"
             >
               <X className="h-5 w-5" />
             </button>
@@ -73,7 +73,7 @@ export function IncidentReportModal({ isOpen, onClose }: IncidentReportModalProp
                     CLASSIFICATION: LEVEL-2 RAPID CONGESTION
                   </span>
                 </div>
-                <h1 className="mt-2 font-display text-2xl font-bold tracking-tight text-white print:text-black">
+                <h1 className="mt-2 font-display text-2xl font-bold tracking-tight text-ink print:text-black">
                   Post-Incident Life Safety & Crowd Stabilization Audit
                 </h1>
                 <p className="text-xs text-slate-400 print:text-slate-600">
@@ -82,7 +82,7 @@ export function IncidentReportModal({ isOpen, onClose }: IncidentReportModalProp
               </div>
 
               <div className="text-right font-mono text-xs text-slate-400 print:text-slate-600">
-                <p className="font-bold text-white print:text-black">CASE FILE #INC-2026-0842-GB</p>
+                <p className="font-bold text-ink print:text-black">CASE FILE #INC-2026-0842-GB</p>
                 <p>STATUS: RESOLVED & VERIFIED</p>
                 <p>DATE: {new Date().toLocaleDateString()} · T+{simulatedMinutes} MIN</p>
               </div>
@@ -195,7 +195,7 @@ export function IncidentReportModal({ isOpen, onClose }: IncidentReportModalProp
                   <Users className="h-4 w-4 text-info print:text-slate-800" />
                   <span>Attendee Hours Saved</span>
                 </div>
-                <p className="mt-1 font-mono text-xl font-bold text-white print:text-black">
+                <p className="mt-1 font-mono text-xl font-bold text-ink print:text-black">
                   1,840 Hours
                 </p>
                 <p className="text-[10px] text-slate-500 print:text-slate-600">Reduced queue congestion across gate sectors</p>

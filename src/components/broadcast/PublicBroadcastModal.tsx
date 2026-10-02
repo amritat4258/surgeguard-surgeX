@@ -64,7 +64,7 @@ export function PublicBroadcastModal({ isOpen, onClose }: PublicBroadcastModalPr
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="font-display text-lg font-bold tracking-tight text-white">
+                <h2 className="font-display text-lg font-bold tracking-tight text-ink">
                   📢 Stadium PA & Digital Screens
                 </h2>
                 <span className="rounded-full border border-purple-500/40 bg-purple-500/10 px-2.5 py-0.5 font-mono text-[10px] font-semibold text-purple-300 flex items-center gap-1">
@@ -85,7 +85,7 @@ export function PublicBroadcastModal({ isOpen, onClose }: PublicBroadcastModalPr
                 type="button"
                 onClick={() => setActiveTab('both')}
                 className={`rounded px-3 py-1 font-medium transition ${
-                  activeTab === 'both' ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-slate-200'
+                  activeTab === 'both' ? 'bg-slate-700 text-ink' : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
                 Split View
@@ -94,7 +94,7 @@ export function PublicBroadcastModal({ isOpen, onClose }: PublicBroadcastModalPr
                 type="button"
                 onClick={() => setActiveTab('led')}
                 className={`flex items-center gap-1 rounded px-3 py-1 font-medium transition ${
-                  activeTab === 'led' ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-slate-200'
+                  activeTab === 'led' ? 'bg-slate-700 text-ink' : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
                 <Tv className="h-3.5 w-3.5" />
@@ -104,7 +104,7 @@ export function PublicBroadcastModal({ isOpen, onClose }: PublicBroadcastModalPr
                 type="button"
                 onClick={() => setActiveTab('mobile')}
                 className={`flex items-center gap-1 rounded px-3 py-1 font-medium transition ${
-                  activeTab === 'mobile' ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-slate-200'
+                  activeTab === 'mobile' ? 'bg-slate-700 text-ink' : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
                 <Smartphone className="h-3.5 w-3.5" />
@@ -125,7 +125,7 @@ export function PublicBroadcastModal({ isOpen, onClose }: PublicBroadcastModalPr
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg p-2 text-slate-400 hover:bg-slate-800 hover:text-white transition"
+              className="rounded-lg p-2 text-slate-400 hover:bg-slate-800 hover:text-ink transition"
             >
               <X className="h-5 w-5" />
             </button>
@@ -138,7 +138,7 @@ export function PublicBroadcastModal({ isOpen, onClose }: PublicBroadcastModalPr
           <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
             <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-3">
               <span className="text-[11px] uppercase tracking-wide text-slate-400">Total Audience Reached</span>
-              <p className="mt-1 font-mono text-xl font-bold text-white">
+              <p className="mt-1 font-mono text-xl font-bold text-ink">
                 {simulatedDeliveries.toLocaleString()} <span className="text-xs text-slate-400 font-normal">devices</span>
               </p>
             </div>
@@ -174,7 +174,7 @@ export function PublicBroadcastModal({ isOpen, onClose }: PublicBroadcastModalPr
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <h3 className="font-display text-base font-bold text-white">
+                        <h3 className="font-display text-base font-bold text-ink">
                           Concourse Public Address (PA) Audio Dispatch
                         </h3>
                         <span className="rounded bg-sky-500/20 border border-sky-500/40 px-2 py-0.5 font-mono text-[10px] text-sky-300">
@@ -252,7 +252,7 @@ export function PublicBroadcastModal({ isOpen, onClose }: PublicBroadcastModalPr
                               {stall.icon}
                             </span>
                             <div>
-                              <h4 className="font-semibold text-xs text-white">
+                              <h4 className="font-semibold text-xs text-ink">
                                 {stall.name}
                               </h4>
                               <span
@@ -336,7 +336,7 @@ export function PublicBroadcastModal({ isOpen, onClose }: PublicBroadcastModalPr
                       <button
                         type="button"
                         onClick={() => setLedDisplayMode('auto')}
-                        className={`rounded px-2 py-0.5 transition ${ledDisplayMode === 'auto' ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white'}`}
+                        className={`rounded px-2 py-0.5 transition ${ledDisplayMode === 'auto' ? 'bg-slate-700 text-ink' : 'text-slate-400 hover:text-ink'}`}
                       >
                         Auto
                       </button>
@@ -350,7 +350,7 @@ export function PublicBroadcastModal({ isOpen, onClose }: PublicBroadcastModalPr
                       <button
                         type="button"
                         onClick={() => setLedDisplayMode('gates')}
-                        className={`rounded px-2 py-0.5 transition ${ledDisplayMode === 'gates' ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white'}`}
+                        className={`rounded px-2 py-0.5 transition ${ledDisplayMode === 'gates' ? 'bg-slate-700 text-ink' : 'text-slate-400 hover:text-ink'}`}
                       >
                         🚪 Gates
                       </button>
@@ -358,7 +358,7 @@ export function PublicBroadcastModal({ isOpen, onClose }: PublicBroadcastModalPr
                   </div>
 
                   {/* Stadium LED Bezel & Screen */}
-                  <div className="flex-1 rounded-xl border-4 border-slate-950 bg-black p-4 shadow-inner relative flex flex-col justify-between min-h-[380px]">
+                  <div data-theme="dark" className="flex-1 rounded-xl border-4 border-slate-950 bg-black p-4 shadow-inner relative flex flex-col justify-between min-h-[380px]">
                     {/* Digital screen header */}
                     <div className="flex items-center justify-between border-b border-amber-950/60 pb-2 text-[10px] font-mono text-amber-500/80">
                       <span>MMRDA STADIUM CONCOURSE NETWORK</span>
@@ -510,7 +510,7 @@ export function PublicBroadcastModal({ isOpen, onClose }: PublicBroadcastModalPr
                     {/* Push Notification Card */}
                     <div className="mb-3 rounded-2xl border border-slate-700/80 bg-slate-900/90 p-3 shadow-xl backdrop-blur-md animate-in slide-in-from-top-4 duration-300">
                       <div className="flex items-center justify-between text-[11px] text-slate-400 mb-1">
-                        <div className="flex items-center gap-1.5 font-semibold text-white">
+                        <div className="flex items-center gap-1.5 font-semibold text-ink">
                           <span className="flex h-4 w-4 items-center justify-center rounded bg-info text-slate-950 text-[9px] font-black">
                             S
                           </span>
@@ -519,7 +519,7 @@ export function PublicBroadcastModal({ isOpen, onClose }: PublicBroadcastModalPr
                         <span>Now</span>
                       </div>
 
-                      <p className="text-xs font-bold text-white">
+                      <p className="text-xs font-bold text-ink">
                         {isStallBroadcastActive
                           ? '💧 Beat the Rush: Fast Water Refill at Gate C'
                           : isExecuted
@@ -551,7 +551,7 @@ export function PublicBroadcastModal({ isOpen, onClose }: PublicBroadcastModalPr
                           <button
                             type="button"
                             onClick={() => setMobileSubTab('stalls')}
-                            className="rounded-lg border border-slate-700 bg-slate-800 px-2 py-1.5 text-[10px] font-semibold text-slate-300 hover:text-white"
+                            className="rounded-lg border border-slate-700 bg-slate-800 px-2 py-1.5 text-[10px] font-semibold text-slate-300 hover:text-ink"
                           >
                             Map
                           </button>
@@ -565,7 +565,7 @@ export function PublicBroadcastModal({ isOpen, onClose }: PublicBroadcastModalPr
                         type="button"
                         onClick={() => setMobileSubTab('gates')}
                         className={`flex-1 py-1 rounded text-center transition ${
-                          mobileSubTab === 'gates' ? 'bg-slate-800 text-white font-bold' : 'text-slate-400 hover:text-slate-200'
+                          mobileSubTab === 'gates' ? 'bg-slate-800 text-ink font-bold' : 'text-slate-400 hover:text-slate-200'
                         }`}
                       >
                         🚪 Gate Queues
@@ -765,7 +765,7 @@ export function PublicBroadcastModal({ isOpen, onClose }: PublicBroadcastModalPr
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg border border-slate-700 bg-slate-800 px-4 py-1.5 font-semibold text-white hover:bg-slate-700 transition"
+              className="rounded-lg border border-slate-700 bg-slate-800 px-4 py-1.5 font-semibold text-ink hover:bg-slate-700 transition"
             >
               Close Preview
             </button>

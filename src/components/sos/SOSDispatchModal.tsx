@@ -77,7 +77,7 @@ export function SOSDispatchModal({ isOpen, onClose }: SOSDispatchModalProps) {
                   </span>
                 )}
               </div>
-              <h3 className="font-display text-base font-bold text-white">
+              <h3 className="font-display text-base font-bold text-ink">
                 {activeSOS ? activeSOS.label : 'Emergency Operations & Triage Console'}
               </h3>
             </div>
@@ -115,7 +115,7 @@ export function SOSDispatchModal({ isOpen, onClose }: SOSDispatchModalProps) {
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white transition ml-1"
+              className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-ink transition ml-1"
             >
               <X className="h-5 w-5" />
             </button>
@@ -134,7 +134,7 @@ export function SOSDispatchModal({ isOpen, onClose }: SOSDispatchModalProps) {
                     <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 mb-3">
                       <ShieldCheck className="h-8 w-8" />
                     </div>
-                    <h4 className="font-display text-base font-bold text-white">
+                    <h4 className="font-display text-base font-bold text-ink">
                       All Sectors Normal · Emergency Rapid Response On Standby
                     </h4>
                     <p className="mt-1 text-xs text-slate-400 max-w-lg mx-auto leading-relaxed">
@@ -155,7 +155,7 @@ export function SOSDispatchModal({ isOpen, onClose }: SOSDispatchModalProps) {
                           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-rose-600/30 text-rose-300 group-hover:scale-110 transition">
                             <HeartPulse className="h-4 w-4" />
                           </span>
-                          <span className="font-bold text-xs text-white">1. Medical Emergency</span>
+                          <span className="font-bold text-xs text-ink">1. Medical Emergency</span>
                           <span className="text-[10px] text-slate-400 text-center">Attendee fainted / heat stroke at Gate B</span>
                         </button>
 
@@ -167,7 +167,7 @@ export function SOSDispatchModal({ isOpen, onClose }: SOSDispatchModalProps) {
                           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-600/30 text-amber-300 group-hover:scale-110 transition">
                             <Flame className="h-4 w-4" />
                           </span>
-                          <span className="font-bold text-xs text-white">2. Pyrotechnic Fire</span>
+                          <span className="font-bold text-xs text-ink">2. Pyrotechnic Fire</span>
                           <span className="text-[10px] text-slate-400 text-center">Stage smoke flare / truss hazard</span>
                         </button>
 
@@ -179,7 +179,7 @@ export function SOSDispatchModal({ isOpen, onClose }: SOSDispatchModalProps) {
                           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-sky-600/30 text-sky-300 group-hover:scale-110 transition">
                             <Baby className="h-4 w-4" />
                           </span>
-                          <span className="font-bold text-xs text-white">3. Lost Child</span>
+                          <span className="font-bold text-xs text-ink">3. Lost Child</span>
                           <span className="text-[10px] text-slate-400 text-center">7-yr-old minor separated from guardian</span>
                         </button>
 
@@ -191,7 +191,7 @@ export function SOSDispatchModal({ isOpen, onClose }: SOSDispatchModalProps) {
                           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-600/30 text-purple-300 group-hover:scale-110 transition">
                             <ShieldAlert className="h-4 w-4" />
                           </span>
-                          <span className="font-bold text-xs text-white">4. Harassment / Safety</span>
+                          <span className="font-bold text-xs text-ink">4. Harassment / Safety</span>
                           <span className="text-[10px] text-slate-400 text-center">Plainclothes marshall discreet extraction</span>
                         </button>
                       </div>
@@ -326,7 +326,7 @@ export function SOSDispatchModal({ isOpen, onClose }: SOSDispatchModalProps) {
                             {activeSOS.responder.avatar}
                           </span>
                           <div className="min-w-0 flex-1">
-                            <h5 className="font-bold text-xs text-white truncate">
+                            <h5 className="font-bold text-xs text-ink truncate">
                               {activeSOS.responder.name}
                             </h5>
                             <p className="text-[11px] text-slate-400">
@@ -429,7 +429,7 @@ export function SOSDispatchModal({ isOpen, onClose }: SOSDispatchModalProps) {
                       >
                         {activeSOS.calmMessageSent ? (
                           <>
-                            <Check className="h-3.5 w-3.5 text-white" />
+                            <Check className="h-3.5 w-3.5 text-ink" />
                             Broadcast Sent to Gate B
                           </>
                         ) : (
@@ -451,7 +451,7 @@ export function SOSDispatchModal({ isOpen, onClose }: SOSDispatchModalProps) {
             <div className="max-w-md mx-auto rounded-3xl border-4 border-slate-700 bg-slate-900 p-4 shadow-2xl space-y-4">
               {/* Phone Status Notch */}
               <div className="flex items-center justify-between text-[11px] font-mono text-slate-400 px-2 pb-1 border-b border-slate-800">
-                <span className="font-bold text-white">19:42</span>
+                <span className="font-bold text-ink">19:42</span>
                 <span>SurgeGuard Attendee Companion</span>
                 <span>5G · 98%</span>
               </div>
@@ -462,7 +462,7 @@ export function SOSDispatchModal({ isOpen, onClose }: SOSDispatchModalProps) {
                   <div className="flex items-center gap-2">
                     <MapPin className="h-4 w-4 text-rose-400" />
                     <div>
-                      <h5 className="text-xs font-bold text-white">MMRDA Grounds, BKC</h5>
+                      <h5 className="text-xs font-bold text-ink">MMRDA Grounds, BKC</h5>
                       <p className="text-[10px] text-slate-400 font-mono">
                         GPS Active: Sector Gate B (Concourse East)
                       </p>
@@ -480,7 +480,7 @@ export function SOSDispatchModal({ isOpen, onClose }: SOSDispatchModalProps) {
                   <span className="font-mono text-xs font-bold text-rose-300 block">
                     🚨 SOS BEACON TRANSMITTED
                   </span>
-                  <p className="text-xs text-white mt-1">
+                  <p className="text-xs text-ink mt-1">
                     {activeSOS.responder?.name} has been assigned.
                   </p>
                   <p className="text-[11px] text-amber-300 font-mono mt-0.5">
@@ -503,7 +503,7 @@ export function SOSDispatchModal({ isOpen, onClose }: SOSDispatchModalProps) {
                     className="flex flex-col items-center gap-1.5 rounded-xl border border-rose-500/60 bg-rose-600/20 hover:bg-rose-600/40 p-3 transition"
                   >
                     <span className="text-2xl">😵</span>
-                    <span className="font-bold text-xs text-white">Medical Help</span>
+                    <span className="font-bold text-xs text-ink">Medical Help</span>
                     <span className="text-[9px] text-rose-200">Fainted / Heart / Heat</span>
                   </button>
 
@@ -513,7 +513,7 @@ export function SOSDispatchModal({ isOpen, onClose }: SOSDispatchModalProps) {
                     className="flex flex-col items-center gap-1.5 rounded-xl border border-amber-500/60 bg-amber-600/20 hover:bg-amber-600/40 p-3 transition"
                   >
                     <span className="text-2xl">🔥</span>
-                    <span className="font-bold text-xs text-white">Fire / Smoke</span>
+                    <span className="font-bold text-xs text-ink">Fire / Smoke</span>
                     <span className="text-[9px] text-amber-200">Pyro / Electrical</span>
                   </button>
 
@@ -523,7 +523,7 @@ export function SOSDispatchModal({ isOpen, onClose }: SOSDispatchModalProps) {
                     className="flex flex-col items-center gap-1.5 rounded-xl border border-sky-500/60 bg-sky-600/20 hover:bg-sky-600/40 p-3 transition"
                   >
                     <span className="text-2xl">👶</span>
-                    <span className="font-bold text-xs text-white">Lost Child</span>
+                    <span className="font-bold text-xs text-ink">Lost Child</span>
                     <span className="text-[9px] text-sky-200">Separated Minor</span>
                   </button>
 
@@ -533,7 +533,7 @@ export function SOSDispatchModal({ isOpen, onClose }: SOSDispatchModalProps) {
                     className="flex flex-col items-center gap-1.5 rounded-xl border border-purple-500/60 bg-purple-600/20 hover:bg-purple-600/40 p-3 transition"
                   >
                     <span className="text-2xl">🛡️</span>
-                    <span className="font-bold text-xs text-white">Harassment</span>
+                    <span className="font-bold text-xs text-ink">Harassment</span>
                     <span className="text-[9px] text-purple-200">Safety Threat</span>
                   </button>
                 </div>

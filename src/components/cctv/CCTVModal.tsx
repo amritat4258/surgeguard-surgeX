@@ -413,7 +413,7 @@ export function CCTVModal({ isOpen, onClose, initialZoneId = 'gate-b' }: CCTVMod
   const densityVal = (activePct / 32).toFixed(1);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-3 backdrop-blur-md animate-in fade-in duration-200">
+    <div data-theme="dark" className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-3 backdrop-blur-md animate-in fade-in duration-200">
       {/* Hidden Video element for real webcam feed ingestion */}
       <video ref={videoRef} autoPlay playsInline muted className="hidden" />
 
@@ -426,7 +426,7 @@ export function CCTVModal({ isOpen, onClose, initialZoneId = 'gate-b' }: CCTVMod
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="font-display text-base font-bold text-white tracking-wide">
+                <h2 className="font-display text-base font-bold text-ink tracking-wide">
                   SurgeGuard Vision // Automated CCTV Intelligence
                 </h2>
                 <span className="flex items-center gap-1 rounded-full border border-rose-500/40 bg-rose-500/10 px-2 py-0.5 font-mono text-[10px] font-semibold text-rose-400">
@@ -467,7 +467,7 @@ export function CCTVModal({ isOpen, onClose, initialZoneId = 'gate-b' }: CCTVMod
                 type="button"
                 onClick={() => setViewMode('single')}
                 className={`flex items-center gap-1 rounded px-2.5 py-1 font-medium transition ${
-                  viewMode === 'single' ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white'
+                  viewMode === 'single' ? 'bg-slate-700 text-ink' : 'text-slate-400 hover:text-ink'
                 }`}
               >
                 <Maximize2 className="h-3 w-3" />
@@ -477,7 +477,7 @@ export function CCTVModal({ isOpen, onClose, initialZoneId = 'gate-b' }: CCTVMod
                 type="button"
                 onClick={() => setViewMode('grid')}
                 className={`flex items-center gap-1 rounded px-2.5 py-1 font-medium transition ${
-                  viewMode === 'grid' ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white'
+                  viewMode === 'grid' ? 'bg-slate-700 text-ink' : 'text-slate-400 hover:text-ink'
                 }`}
               >
                 <Grid className="h-3 w-3" />
@@ -488,7 +488,7 @@ export function CCTVModal({ isOpen, onClose, initialZoneId = 'gate-b' }: CCTVMod
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white transition"
+              className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-ink transition"
             >
               <X className="h-5 w-5" />
             </button>
@@ -582,7 +582,7 @@ export function CCTVModal({ isOpen, onClose, initialZoneId = 'gate-b' }: CCTVMod
 
                   <div className="rounded bg-slate-900/80 border border-slate-700/80 px-2.5 py-1">
                     <span className="text-slate-400 text-[10px]">HEADCOUNT IN ZONE: </span>
-                    <strong className="text-white">{activeZone.current.toLocaleString()}</strong>
+                    <strong className="text-ink">{activeZone.current.toLocaleString()}</strong>
                     <span className="text-slate-400"> / {activeZone.capacity.toLocaleString()}</span>
                   </div>
                 </div>
@@ -645,7 +645,7 @@ export function CCTVModal({ isOpen, onClose, initialZoneId = 'gate-b' }: CCTVMod
                     }`}
                   >
                     <div className="flex items-center justify-between font-mono text-[10px] text-slate-400 mb-1.5">
-                      <span className="font-bold text-white flex items-center gap-1">
+                      <span className="font-bold text-ink flex items-center gap-1">
                         <span className={`h-1.5 w-1.5 rounded-full ${isCrit ? 'bg-rose-500 animate-ping' : 'bg-emerald-400'}`} />
                         {cam.id}
                       </span>
@@ -687,7 +687,7 @@ export function CCTVModal({ isOpen, onClose, initialZoneId = 'gate-b' }: CCTVMod
           <button
             type="button"
             onClick={onClose}
-            className="rounded border border-slate-700 bg-slate-800 px-3 py-1 font-semibold text-white hover:bg-slate-700 transition"
+            className="rounded border border-slate-700 bg-slate-800 px-3 py-1 font-semibold text-ink hover:bg-slate-700 transition"
           >
             Close Feed
           </button>

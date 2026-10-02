@@ -1,24 +1,7 @@
+@import './theme/palettes.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* ── SurgeGuard dark control-room theme ──────────────────────────── */
-:root {
-  /* Surface: near-black navy */
-  --color-surface-base: 6 10 22;       /* #060A16 */
-  --color-surface-panel: 12 18 36;     /* #0C1224 */
-  --color-surface-raised: 18 26 48;    /* #121A30 */
-  --color-surface-border: 30 42 68;    /* #1E2A44 */
-
-  /* Semantic risk colors */
-  --color-risk-normal: 34 197 94;     /* green-500  */
-  --color-risk-warning: 245 158 11;   /* amber-500  */
-  --color-risk-high: 249 115 22;      /* orange-500 */
-  --color-risk-critical: 239 68 68;   /* red-500    */
-
-  /* Info / action — cyan */
-  --color-info: 6 182 212;            /* cyan-500   */
-}
 
 html,
 body,
@@ -27,8 +10,9 @@ body,
 }
 
 body {
+  transition: background-color 0.25s ease, color 0.25s ease;
   background-color: rgb(var(--color-surface-base));
-  color: rgb(203 213 225); /* slate-300 */
+  color: rgb(var(--color-body));
   font-family: "Space Grotesk", system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

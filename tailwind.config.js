@@ -1,5 +1,18 @@
+const SHADES = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950];
+const PALETTES = ['slate', 'emerald', 'amber', 'sky', 'rose', 'red', 'orange', 'purple', 'indigo', 'blue'];
+// Every palette reads CSS variables so the whole app flips with the theme.
+const themed = Object.fromEntries(
+  PALETTES.map((name) => [
+    name,
+    Object.fromEntries(
+      SHADES.map((s) => [s, `rgb(var(--c-${name}-${s}) / <alpha-value>)`])
+    ),
+  ])
+);
+
 /** @type {import('tailwindcss').Config} */
 export default {
+  darkMode: ['selector', "[data-theme='dark']"],
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {
@@ -9,6 +22,9 @@ export default {
         mono: ['"JetBrains Mono"', '"Fira Code"', 'monospace'],
       },
       colors: {
+        ...themed,
+        // Foreground ink: white in dark mode, deep plum in light mode
+        ink: 'rgb(var(--color-ink) / <alpha-value>)',
         // Semantic risk / status colors
         risk: {
           normal: 'rgb(var(--color-risk-normal) / <alpha-value>)',

@@ -205,7 +205,7 @@ export function DroneThermalPatrol({ onClose }: DroneThermalPatrolProps) {
   }[palette];
 
   return (
-    <div className={`relative rounded-xl border ${paletteStyles.border} ${paletteStyles.bg} overflow-hidden font-mono shadow-2xl transition-colors duration-500 select-none`}>
+    <div data-theme="dark" className={`relative rounded-xl border ${paletteStyles.border} ${paletteStyles.bg} overflow-hidden font-mono shadow-2xl transition-colors duration-500 select-none`}>
       {/* Visual Camera Flash Effect on Snapshot */}
       {snapshotTaken && (
         <div className="absolute inset-0 z-50 bg-white/95 pointer-events-none animate-out fade-out duration-500" />
@@ -219,7 +219,7 @@ export function DroneThermalPatrol({ onClose }: DroneThermalPatrolProps) {
           </span>
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-bold tracking-wider text-white">
+              <span className="font-bold tracking-wider text-ink">
                 UAV-SURGE-1 · DJI MATRICE 300 RTK // FLIR ZENMUSE H20T
               </span>
               <span className="rounded bg-rose-500/20 border border-rose-500/50 px-1.5 py-0.2 text-[10px] font-bold text-rose-300 animate-pulse">
@@ -593,7 +593,7 @@ export function DroneThermalPatrol({ onClose }: DroneThermalPatrolProps) {
             type="button"
             onClick={() => setPalette('ironbow')}
             className={`px-2.5 py-1 rounded-lg border transition text-[11px] ${
-              palette === 'ironbow' ? 'border-amber-400 bg-amber-500/20 text-amber-300 font-bold' : 'border-slate-800 text-slate-400 hover:text-white'
+              palette === 'ironbow' ? 'border-amber-400 bg-amber-500/20 text-amber-300 font-bold' : 'border-slate-800 text-slate-400 hover:text-ink'
             }`}
           >
             🔥 Ironbow
@@ -602,7 +602,7 @@ export function DroneThermalPatrol({ onClose }: DroneThermalPatrolProps) {
             type="button"
             onClick={() => setPalette('whitehot')}
             className={`px-2.5 py-1 rounded-lg border transition text-[11px] ${
-              palette === 'whitehot' ? 'border-slate-300 bg-slate-300/20 text-white font-bold' : 'border-slate-800 text-slate-400 hover:text-white'
+              palette === 'whitehot' ? 'border-slate-300 bg-slate-300/20 text-ink font-bold' : 'border-slate-800 text-slate-400 hover:text-ink'
             }`}
           >
             ⚪ White-Hot
@@ -611,7 +611,7 @@ export function DroneThermalPatrol({ onClose }: DroneThermalPatrolProps) {
             type="button"
             onClick={() => setPalette('nvg')}
             className={`px-2.5 py-1 rounded-lg border transition text-[11px] ${
-              palette === 'nvg' ? 'border-emerald-400 bg-emerald-500/20 text-emerald-300 font-bold' : 'border-slate-800 text-slate-400 hover:text-white'
+              palette === 'nvg' ? 'border-emerald-400 bg-emerald-500/20 text-emerald-300 font-bold' : 'border-slate-800 text-slate-400 hover:text-ink'
             }`}
           >
             🟢 NVG Phosphor
@@ -625,7 +625,7 @@ export function DroneThermalPatrol({ onClose }: DroneThermalPatrolProps) {
             type="button"
             onClick={() => handleWaypointSelect('gate-b')}
             className={`px-2 py-1 rounded-lg border transition text-[11px] ${
-              activeWaypoint === 'gate-b' ? 'border-rose-500 bg-rose-500/20 text-rose-300 font-bold' : 'border-slate-800 text-slate-400 hover:text-white'
+              activeWaypoint === 'gate-b' ? 'border-rose-500 bg-rose-500/20 text-rose-300 font-bold' : 'border-slate-800 text-slate-400 hover:text-ink'
             }`}
           >
             🎯 Gate B Lock
@@ -634,7 +634,7 @@ export function DroneThermalPatrol({ onClose }: DroneThermalPatrolProps) {
             type="button"
             onClick={() => handleWaypointSelect('gate-c')}
             className={`px-2 py-1 rounded-lg border transition text-[11px] ${
-              activeWaypoint === 'gate-c' ? 'border-emerald-500 bg-emerald-500/20 text-emerald-300 font-bold' : 'border-slate-800 text-slate-400 hover:text-white'
+              activeWaypoint === 'gate-c' ? 'border-emerald-500 bg-emerald-500/20 text-emerald-300 font-bold' : 'border-slate-800 text-slate-400 hover:text-ink'
             }`}
           >
             🚪 Gate C Egress
@@ -643,7 +643,7 @@ export function DroneThermalPatrol({ onClose }: DroneThermalPatrolProps) {
             type="button"
             onClick={() => setIsCinematicOrbit((v) => !v)}
             className={`px-2 py-1 rounded-lg border transition text-[11px] flex items-center gap-1 ${
-              isCinematicOrbit ? 'border-purple-500 bg-purple-500/20 text-purple-300 font-bold' : 'border-slate-800 text-slate-400 hover:text-white'
+              isCinematicOrbit ? 'border-purple-500 bg-purple-500/20 text-purple-300 font-bold' : 'border-slate-800 text-slate-400 hover:text-ink'
             }`}
           >
             {isCinematicOrbit ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
@@ -658,7 +658,7 @@ export function DroneThermalPatrol({ onClose }: DroneThermalPatrolProps) {
               setIsCinematicOrbit(false);
             }}
             title="Reset 3D Gimbal to Default"
-            className="p-1 rounded-lg border border-slate-800 text-slate-400 hover:text-white"
+            className="p-1 rounded-lg border border-slate-800 text-slate-400 hover:text-ink"
           >
             <RotateCcw className="h-3 w-3" />
           </button>

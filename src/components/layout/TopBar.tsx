@@ -1,5 +1,6 @@
 import { Play, Pause, RotateCcw, ShieldAlert, Siren, Megaphone, Smartphone } from 'lucide-react';
 import { useCommandCenter } from '@/state/CommandCenterProvider';
+import { ThemeToggle } from '@/theme/ThemeToggle';
 import type { FeedStatus, SimStatus } from '@/types';
 
 const statusLook: Record<SimStatus, { label: string; cls: string }> = {
@@ -111,11 +112,12 @@ export function TopBar() {
 
       {/* Controls */}
       <div className="flex flex-wrap items-center gap-2">
+        <ThemeToggle />
         {/* 0a. Mobile Attendee App Preview */}
         <button
           type="button"
           onClick={() => setIsAttendeeModalOpen(true)}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/40 bg-emerald-950/40 px-3 py-2 text-xs font-mono font-bold text-emerald-300 hover:bg-emerald-900/60 hover:text-white transition hover:scale-105 active:scale-95"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/40 bg-emerald-950/40 px-3 py-2 text-xs font-mono font-bold text-emerald-300 hover:bg-emerald-900/60 hover:text-ink transition hover:scale-105 active:scale-95"
           title="Attendee mobile app — live stall wait times"
         >
           <Smartphone className="h-4 w-4 text-emerald-400" />
@@ -126,7 +128,7 @@ export function TopBar() {
         <button
           type="button"
           onClick={() => setIsBroadcastModalOpen(true)}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-purple-500/40 bg-purple-950/40 px-3 py-2 text-xs font-mono font-bold text-purple-300 hover:bg-purple-900/60 hover:text-white transition hover:scale-105 active:scale-95"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-purple-500/40 bg-purple-950/40 px-3 py-2 text-xs font-mono font-bold text-purple-300 hover:bg-purple-900/60 hover:text-ink transition hover:scale-105 active:scale-95"
           title="Inside stadium speakers & digital signage"
         >
           <Megaphone className="h-4 w-4 text-purple-400" />
@@ -137,7 +139,7 @@ export function TopBar() {
         <button
           type="button"
           onClick={() => setIsPoliceModalOpen(true)}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-sky-500/40 bg-sky-950/40 px-3 py-2 text-xs font-mono font-bold text-sky-300 hover:bg-sky-900/60 hover:text-white transition hover:scale-105 active:scale-95"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-sky-500/40 bg-sky-950/40 px-3 py-2 text-xs font-mono font-bold text-sky-300 hover:bg-sky-900/60 hover:text-ink transition hover:scale-105 active:scale-95"
           title="Outside city traffic & Green Corridor"
         >
           <ShieldAlert className="h-4 w-4 text-sky-400" />
@@ -154,7 +156,7 @@ export function TopBar() {
           className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-mono font-bold transition hover:scale-105 active:scale-95 ${
             activeSOS
               ? 'border-rose-500 bg-rose-600 text-white shadow-[0_0_20px_rgba(244,63,94,0.6)] animate-pulse'
-              : 'border-rose-500/40 bg-rose-950/40 text-rose-300 hover:bg-rose-900/60 hover:text-white'
+              : 'border-rose-500/40 bg-rose-950/40 text-rose-300 hover:bg-rose-900/60 hover:text-ink'
           }`}
           title="On-site paramedic dispatch"
         >

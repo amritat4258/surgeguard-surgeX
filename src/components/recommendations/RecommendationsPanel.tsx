@@ -80,7 +80,7 @@ export function RecommendationsPanel() {
                         <button
                           type="button"
                           onClick={() => setIsBroadcastOpen(true)}
-                          className="shrink-0 rounded-md border border-slate-700 bg-slate-800 px-2 py-1 text-[11px] font-medium text-slate-300 hover:text-white transition"
+                          className="shrink-0 rounded-md border border-slate-700 bg-slate-800 px-2 py-1 text-[11px] font-medium text-slate-300 hover:text-ink transition"
                         >
                           Preview Screen
                         </button>

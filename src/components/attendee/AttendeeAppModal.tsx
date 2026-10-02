@@ -23,6 +23,7 @@ export default function AttendeeAppModal({ isOpen, onClose }: AttendeeAppModalPr
 
   return (
     <div
+      data-theme="dark"
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
       onClick={onClose}
     >
@@ -49,7 +50,7 @@ export default function AttendeeAppModal({ isOpen, onClose }: AttendeeAppModalPr
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute top-10 right-3 z-10 rounded-full bg-slate-700/80 p-1.5 text-slate-300 hover:bg-slate-600 hover:text-white transition-colors"
+          className="absolute top-10 right-3 z-10 rounded-full bg-slate-700/80 p-1.5 text-slate-300 hover:bg-slate-600 hover:text-ink transition-colors"
           aria-label="Close"
         >
           <X size={16} />
@@ -61,10 +62,10 @@ export default function AttendeeAppModal({ isOpen, onClose }: AttendeeAppModalPr
           {/* App header */}
           <div className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 shadow">
-              <Shield size={16} className="text-white" />
+              <Shield size={16} className="text-ink" />
             </div>
             <div>
-              <p className="text-xs font-bold text-white leading-tight">SurgeGuard Attendee</p>
+              <p className="text-xs font-bold text-ink leading-tight">SurgeGuard Attendee</p>
               <p className="text-[10px] text-slate-400">Your safety companion</p>
             </div>
           </div>
@@ -75,7 +76,7 @@ export default function AttendeeAppModal({ isOpen, onClose }: AttendeeAppModalPr
               <MapPin size={14} className="text-blue-400" />
               <span className="text-[11px] font-semibold text-slate-300 uppercase tracking-wider">Your Zone</span>
             </div>
-            <p className="text-base font-bold text-white">Main Arena – Zone B</p>
+            <p className="text-base font-bold text-ink">Main Arena – Zone B</p>
             <div className="mt-2 flex items-center gap-2">
               <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/50 bg-amber-500/20 px-2 py-0.5 text-[10px] font-semibold text-amber-300">
                 <Zap size={9} />
@@ -122,7 +123,7 @@ export default function AttendeeAppModal({ isOpen, onClose }: AttendeeAppModalPr
 
                   {/* Info */}
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold text-white truncate leading-tight">
+                    <p className="text-xs font-semibold text-ink truncate leading-tight">
                       {facility.name}
                     </p>
                     <div className="mt-1 flex items-center gap-1.5 flex-wrap">

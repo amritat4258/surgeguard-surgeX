@@ -262,7 +262,7 @@ export function MetricCards() {
                 className={`px-2.5 py-1 rounded-lg border transition text-[11px] flex items-center gap-1 ${
                   effectiveCrowd < 25000
                     ? 'border-emerald-500 bg-emerald-500/20 text-emerald-300 font-bold'
-                    : 'border-slate-800 bg-slate-900 text-slate-400 hover:text-white'
+                    : 'border-slate-800 bg-slate-900 text-slate-400 hover:text-ink'
                 }`}
               >
                 <span>🟢 Nominal State (19.5k)</span>
@@ -274,7 +274,7 @@ export function MetricCards() {
                 className={`px-2.5 py-1 rounded-lg border transition text-[11px] flex items-center gap-1 ${
                   effectiveCrowd >= 25000 && effectiveCrowd < 42000
                     ? 'border-amber-500 bg-amber-500/20 text-amber-300 font-bold'
-                    : 'border-slate-800 bg-slate-900 text-slate-400 hover:text-white'
+                    : 'border-slate-800 bg-slate-900 text-slate-400 hover:text-ink'
                 }`}
               >
                 <span>🟡 Surge Concourse (36k)</span>
@@ -286,7 +286,7 @@ export function MetricCards() {
                 className={`px-2.5 py-1 rounded-lg border transition text-[11px] flex items-center gap-1 ${
                   effectiveCrowd >= 42000
                     ? 'border-rose-500 bg-rose-500/20 text-rose-300 font-bold'
-                    : 'border-slate-800 bg-slate-900 text-slate-400 hover:text-white'
+                    : 'border-slate-800 bg-slate-900 text-slate-400 hover:text-ink'
                 }`}
               >
                 <span>🔴 Critical Crush (48k)</span>
@@ -298,7 +298,7 @@ export function MetricCards() {
                 className={`px-2.5 py-1 rounded-lg border transition text-[11px] ml-auto ${
                   crowdOverride === null
                     ? 'border-sky-500/80 bg-sky-500/20 text-sky-300 font-bold'
-                    : 'border-slate-800 bg-slate-900 text-slate-400 hover:text-white'
+                    : 'border-slate-800 bg-slate-900 text-slate-400 hover:text-ink'
                 }`}
               >
                 <span>⚡ Live Feed Sync ({actualCrowd.toLocaleString()})</span>

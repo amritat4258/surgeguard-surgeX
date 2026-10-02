@@ -11,6 +11,7 @@ import {
 } from 'recharts';
 import type { Zone, ZoneId } from '@/types';
 import { useCommandCenter } from '@/state/CommandCenterProvider';
+import { useChartColors } from '@/theme/ThemeProvider';
 import { getForecastSeries, getForecastStepMin } from '@/engine/prediction';
 import {
   MINUTES_PER_TICK,
@@ -31,6 +32,7 @@ const FORECAST_TICKS = 6; // future readings shown
 export function TrendChart() {
   const { zoneList, zones, execution, simulatedMinutes } = useCommandCenter();
   const [selected, setSelected] = useState<ZoneId>('gate-b');
+  const c = useChartColors();
   const zone = zones[selected];
 
   // Keep the last zone snapshot from BEFORE the plan was executed, so we can
@@ -122,13 +124,13 @@ export function TrendChart() {
       <div className="h-64">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data} margin={{ top: 10, right: 16, bottom: 0, left: 0 }}>
-            <CartesianGrid stroke="#334155" strokeDasharray="3 3" />
+            <CartesianGrid stroke={c.grid} strokeDasharray="3 3" />
             <XAxis
               dataKey="t"
               type="number"
               domain={['dataMin', 'dataMax']}
               tickFormatter={tickLabel}
-              stroke="#64748b"
+              stroke={c.axis}
               fontSize={11}
             />
             <YAxis
@@ -137,14 +139,15 @@ export function TrendChart() {
                 zone.capacity,
               ]}
               tickFormatter={(v: number) => v.toLocaleString()}
-              stroke="#64748b"
+              stroke={c.axis}
               fontSize={11}
               width={56}
             />
             <Tooltip
               contentStyle={{
-                background: '#0f172a',
-                border: '1px solid #334155',
+                background: c.tooltipBg,
+                border: '1px solid ' + c.tooltipBorder,
+                color: c.tooltipText,
                 borderRadius: 8,
                 fontSize: 12,
               }}
@@ -153,11 +156,11 @@ export function TrendChart() {
             />
             <ReferenceLine
               y={zone.capacity}
-              stroke="#ef4444"
+              stroke={c.danger}
               strokeDasharray="4 4"
               label={{
                 value: 'Capacity',
-                fill: '#ef4444',
+                fill: c.danger,
                 fontSize: 11,
                 position: 'insideTopLeft',
               }}
@@ -166,7 +169,7 @@ export function TrendChart() {
               type="monotone"
               dataKey="actual"
               name="Actual"
-              stroke="#38bdf8"
+              stroke={c.actual}
               strokeWidth={2.5}
               dot={false}
               isAnimationActive={false}
@@ -176,7 +179,7 @@ export function TrendChart() {
               type="monotone"
               dataKey="forecast"
               name="Forecast"
-              stroke="#f97316"
+              stroke={c.forecast}
               strokeWidth={2.5}
               strokeDasharray="6 4"
               dot={false}
@@ -188,7 +191,7 @@ export function TrendChart() {
                 type="monotone"
                 dataKey="withoutPlan"
                 name="Without SurgeGuard"
-                stroke="#ef4444"
+                stroke={c.danger}
                 strokeWidth={2.5}
                 strokeDasharray="2 4"
                 dot={false}
