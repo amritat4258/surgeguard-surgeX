@@ -1,4 +1,4 @@
-import {
+﻿import {
   CommandCenterProvider,
   useCommandCenter,
 } from '@/state/CommandCenterProvider';
@@ -17,6 +17,7 @@ import { SOSDispatchModal } from '@/components/sos/SOSDispatchModal';
 import { PoliceDispatchModal } from '@/components/government/PoliceDispatchModal';
 import { PublicBroadcastModal } from '@/components/broadcast/PublicBroadcastModal';
 import AttendeeAppModal from '@/components/attendee/AttendeeAppModal';
+import { AttendeePushPanel } from '@/components/attendee/AttendeePushPanel';
 
 function Dashboard() {
   const {
@@ -59,6 +60,8 @@ function Dashboard() {
           </div>
         )}
         <MetricCards />
+
+        <AttendeePushPanel />
 
         <section className="grid gap-4 lg:grid-cols-2">
           <AlertsPanel />

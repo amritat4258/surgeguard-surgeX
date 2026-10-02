@@ -1,5 +1,6 @@
-// WebSocket client for the sensor gateway. Reconnects with backoff, ignores
+﻿// WebSocket client for the sensor gateway. Reconnects with backoff, ignores
 // malformed messages, and flags the feed STALE when data stops arriving.
+// Messages with a string `kind` (SOS, status, broadcast) go to onMessage.
 
 import type { FeedStatus, ZoneReading } from '@/types';
 import { isValidReading } from '@/engine/live';
@@ -7,6 +8,7 @@ import { LIVE_STALE_AFTER_MS } from '@/config/scenario';
 
 type ReadingsCb = (readings: ZoneReading[]) => void;
 type StatusCb = (status: FeedStatus) => void;
+export type AppMessageCb = (message: Record<string, unknown>) => void;
 
 export class WebSocketSource {
   private ws: WebSocket | null = null;
@@ -20,7 +22,8 @@ export class WebSocketSource {
   constructor(
     private url: string,
     private onReadings: ReadingsCb,
-    private onStatus: StatusCb
+    private onStatus: StatusCb,
+    private onMessage?: AppMessageCb
   ) {}
 
   start() {
@@ -44,7 +47,7 @@ export class WebSocketSource {
     this.setStatus('offline');
   }
 
-  /** Send a command to the gateway (e.g. an executed response plan). */
+  /** Send a command or app message to the gateway. */
   send(message: unknown): boolean {
     if (this.ws?.readyState !== WebSocket.OPEN) return false;
     this.ws.send(JSON.stringify(message));
@@ -69,14 +72,27 @@ export class WebSocketSource {
     };
 
     ws.onmessage = (ev) => {
-      this.lastMessageAt = Date.now();
-      if (this.status !== 'live') this.setStatus('live');
       let payload: unknown;
       try {
         payload = JSON.parse(String(ev.data));
       } catch {
         return; // ignore malformed frames
       }
+
+      // App message (SOS, status, broadcast): not sensor data, so it must
+      // not reset the stale-data watchdog.
+      if (
+        payload &&
+        typeof payload === 'object' &&
+        !Array.isArray(payload) &&
+        typeof (payload as { kind?: unknown }).kind === 'string'
+      ) {
+        this.onMessage?.(payload as Record<string, unknown>);
+        return;
+      }
+
+      this.lastMessageAt = Date.now();
+      if (this.status !== 'live') this.setStatus('live');
       const items = Array.isArray(payload) ? payload : [payload];
       const valid = items.filter(isValidReading);
       if (valid.length > 0) this.onReadings(valid);

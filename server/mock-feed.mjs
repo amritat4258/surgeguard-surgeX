@@ -1,4 +1,4 @@
-// Fake "sensor gateway" so live mode can be tested without real hardware.
+﻿// Fake "sensor gateway" so live mode can be tested without real hardware.
 //
 //   npm install            (installs the "ws" dev dependency)
 //   npm run feed           (starts this server on ws://localhost:8080)
@@ -11,10 +11,17 @@
 //           {"cmd":"speed", "multiplier": 2}          Speed up sensor time
 //           {"cmd":"execute", sourceZoneId, targetZoneId, redirectPeople, staffToDeploy}
 //           {"cmd":"reset"}
+//
+// Also relays app messages between connected devices (organizer <-> phones):
+//           {"kind":"sos"|"sos_status"|"broadcast", ...}
+// The message goes to every OTHER client, unchanged. Other kinds are dropped.
 
 import { WebSocketServer } from 'ws';
 
 const PORT = Number(process.env.PORT ?? 8080);
+const RELAY_KINDS = new Set(['sos', 'sos_status', 'broadcast']);
+const MAX_PAYLOAD_BYTES = 4096;
+
 let tickMs = 2000;
 let sensorMsPerTick = 60_000;
 
@@ -43,23 +50,44 @@ function reset() {
 }
 reset();
 
-const wss = new WebSocketServer({ port: PORT });
-console.log(`[SurgeGuard Gateway] Mock sensor feed running on ws://localhost:${PORT}`);
+const wss = new WebSocketServer({ port: PORT, maxPayload: MAX_PAYLOAD_BYTES });
+console.log(`[SurgeGuard Gateway] Mock sensor feed running on ws://localhost:${PORT} (all network interfaces)`);
 
 let autoSurgeArmed = process.env.AUTO_SURGE !== '0';
 
 wss.on('connection', (ws) => {
-  console.log('[SurgeGuard Gateway] Client connected');
+  console.log(`[SurgeGuard Gateway] Client connected (${wss.clients.size} total)`);
   if (autoSurgeArmed) {
     autoSurgeArmed = false;
     setTimeout(() => (surgeTicks = SURGE_TICKS), 15_000);
   }
+
+  ws.on('close', () => {
+    console.log(`[SurgeGuard Gateway] Client left (${wss.clients.size} total)`);
+  });
+  ws.on('error', () => {});
 
   ws.on('message', (raw) => {
     let m;
     try {
       m = JSON.parse(String(raw));
     } catch {
+      return;
+    }
+    if (!m || typeof m !== 'object' || Array.isArray(m)) return;
+
+    // App messages: relay to every other client, only for allowed kinds.
+    if (typeof m.kind === 'string') {
+      if (!RELAY_KINDS.has(m.kind)) return;
+      const text = String(raw);
+      let delivered = 0;
+      for (const c of wss.clients) {
+        if (c !== ws && c.readyState === 1) {
+          c.send(text);
+          delivered++;
+        }
+      }
+      console.log(`[SurgeGuard Gateway] Relayed "${m.kind}" to ${delivered} client(s)`);
       return;
     }
 
