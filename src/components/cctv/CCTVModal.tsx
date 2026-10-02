@@ -154,6 +154,35 @@ export function CCTVModal({ isOpen, onClose, initialZoneId = 'gate-b' }: CCTVMod
     };
   }, [isOpen, sourceType]);
 
+  // Handle Demo Video Loading & Loop Playback (0:10 to 0:17 Crowd Surveillance Clip)
+  useEffect(() => {
+    if (!isOpen) return;
+
+    if (sourceType === 'demo_gate') {
+      if (videoRef.current) {
+        videoRef.current.srcObject = null;
+        videoRef.current.src = '/videos/cctv-demo.mp4';
+        videoRef.current.loop = true;
+        videoRef.current.muted = true;
+        videoRef.current.play().catch((err) => {
+          console.warn('Demo video playback notice:', err);
+        });
+        setIsPlaying(true);
+      }
+    }
+  }, [isOpen, sourceType]);
+
+  // Sync Video element Play/Pause with isPlaying state
+  useEffect(() => {
+    if (videoRef.current) {
+      if (isPlaying) {
+        videoRef.current.play().catch(() => {});
+      } else {
+        videoRef.current.pause();
+      }
+    }
+  }, [isPlaying]);
+
   // Precision clock with milliseconds
   useEffect(() => {
     if (!isOpen) return;
@@ -245,12 +274,17 @@ export function CCTVModal({ isOpen, onClose, initialZoneId = 'gate-b' }: CCTVMod
 
     const render = () => {
       frameCountRef.current++;
-      const isCustomVideo = sourceType === 'custom' && customVideoUrl && videoRef.current;
-      const isWebcamVideo = sourceType === 'webcam' && streamRef.current && videoRef.current;
+      const isDemoVideo = sourceType === 'demo_gate';
+      const isCustomVideo = sourceType === 'custom' && customVideoUrl;
+      const isWebcamVideo = sourceType === 'webcam' && streamRef.current;
+      const hasActiveVideo =
+        (isDemoVideo || isCustomVideo || isWebcamVideo) &&
+        videoRef.current &&
+        videoRef.current.readyState >= 2;
 
       // ── STEP 1: RENDER VIDEO BACKGROUND ──────────────────────────────────
-      if ((isCustomVideo || isWebcamVideo) && videoRef.current && videoRef.current.readyState >= 2) {
-        // Draw real custom video or webcam
+      if (hasActiveVideo && videoRef.current) {
+        // Draw real CCTV video clip (0:10 to 0:17), custom uploaded video, or webcam
         ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
       } else {
         // ── SYNTHETIC HIGH-DEF SURVEILLANCE VIDEO GENERATOR ────────────────
@@ -643,9 +677,10 @@ export function CCTVModal({ isOpen, onClose, initialZoneId = 'gate-b' }: CCTVMod
                     ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/40'
                     : 'text-slate-400 hover:text-white'
                 }`}
+                title="Crowd Surveillance Video (0:10 to 0:17)"
               >
                 <Video className="h-3 w-3" />
-                Demo Video
+                Crowd Video (0:10-0:17)
               </button>
 
               <button
