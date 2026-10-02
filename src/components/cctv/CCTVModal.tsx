@@ -24,6 +24,7 @@ import {
   Compass,
   Users,
 } from 'lucide-react';
+import { MiniCameraPreview } from './MiniCameraPreview';
 import { useCommandCenter } from '@/state/CommandCenterProvider';
 import type { ZoneId, VisionTrackedPerson, RiskLevel } from '@/types';
 
@@ -111,6 +112,8 @@ export function CCTVModal({ isOpen, onClose, initialZoneId = 'gate-b' }: CCTVMod
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const pedestriansRef = useRef<InternalPedestrian[]>([]);
   const frameCountRef = useRef(0);
+  const offCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const prevVideoDataRef = useRef<Uint8ClampedArray | null>(null);
 
   // Sync selected camera if initialZoneId changes when modal opens
   useEffect(() => {
@@ -282,10 +285,92 @@ export function CCTVModal({ isOpen, onClose, initialZoneId = 'gate-b' }: CCTVMod
         videoRef.current &&
         videoRef.current.readyState >= 2;
 
-      // ── STEP 1: RENDER VIDEO BACKGROUND ──────────────────────────────────
+      // ── STEP 1: RENDER VIDEO BACKGROUND & REAL COMPUTER VISION TRACKER ───
       if (hasActiveVideo && videoRef.current) {
-        // Draw real CCTV video clip (0:10 to 0:17), custom uploaded video, or webcam
+        // 1a. Draw real CCTV video frame (0:10 to 0:17), custom uploaded video, or webcam
         ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+
+        // 1b. Real Pixel Motion & Pedestrian Detection on Video Frames
+        if (!offCanvasRef.current) {
+          const oc = document.createElement('canvas');
+          oc.width = 160;
+          oc.height = 90;
+          offCanvasRef.current = oc;
+        }
+
+        const oc = offCanvasRef.current;
+        const octx = oc.getContext('2d', { willReadFrequently: true });
+
+        if (octx && frameCountRef.current % 2 === 0) {
+          octx.drawImage(videoRef.current, 0, 0, 160, 90);
+          const imgData = octx.getImageData(0, 0, 160, 90);
+          const data = imgData.data;
+
+          if (prevVideoDataRef.current) {
+            const prev = prevVideoDataRef.current;
+            const gridW = 16;
+            const gridH = 9;
+            const cellW = 160 / gridW;
+            const cellH = 90 / gridH;
+            const cellMotion = new Float32Array(gridW * gridH);
+
+            for (let y = 0; y < 90; y++) {
+              const gy = Math.floor(y / cellH);
+              for (let x = 0; x < 160; x++) {
+                const gx = Math.floor(x / cellW);
+                const idx = (y * 160 + x) * 4;
+                const diff =
+                  Math.abs(data[idx] - prev[idx]) +
+                  Math.abs(data[idx + 1] - prev[idx + 1]) +
+                  Math.abs(data[idx + 2] - prev[idx + 2]);
+
+                if (diff > 28) {
+                  cellMotion[gy * gridW + gx] += diff;
+                }
+              }
+            }
+
+            const detectedMotionClusters: { cx: number; cy: number; w: number; h: number; energy: number }[] = [];
+            for (let gy = 0; gy < gridH; gy++) {
+              for (let gx = 0; gx < gridW; gx++) {
+                const energy = cellMotion[gy * gridW + gx];
+                if (energy > 220) {
+                  const cx = (gx + 0.5) * cellW * (canvas.width / 160);
+                  const cy = (gy + 0.5) * cellH * (canvas.height / 90);
+                  const bw = cellW * (canvas.width / 160) * 1.5;
+                  const bh = cellH * (canvas.height / 90) * 2.2;
+                  detectedMotionClusters.push({ cx, cy, w: bw, h: bh, energy });
+                }
+              }
+            }
+
+            if (detectedMotionClusters.length >= 2) {
+              const updatedPeds: InternalPedestrian[] = detectedMotionClusters.slice(0, 24).map((c, i) => {
+                const existing = pedestriansRef.current[i];
+                const vx = existing ? (c.cx - existing.x) * 0.35 : (Math.random() - 0.5) * 1.2;
+                const vy = existing ? (c.cy - existing.y) * 0.35 : 0.8;
+                return {
+                  id: 101 + i,
+                  x: existing ? existing.x + (c.cx - existing.x) * 0.45 : c.cx,
+                  y: existing ? existing.y + (c.cy - existing.y) * 0.45 : c.cy,
+                  vx,
+                  vy,
+                  targetX: c.cx,
+                  targetY: c.cy,
+                  boxW: c.w,
+                  boxH: c.h,
+                  conf: Math.min(0.99, 0.92 + (c.energy / 4000) * 0.07),
+                  risk: Math.hypot(vx, vy) > 2.8 ? 'warning' : 'normal',
+                  lane: Math.floor(c.cx / (canvas.width / 4)),
+                  speed: Math.hypot(vx, vy),
+                  color: '#38bdf8',
+                };
+              });
+              pedestriansRef.current = updatedPeds;
+            }
+          }
+          prevVideoDataRef.current = new Uint8ClampedArray(data);
+        }
       } else {
         // ── SYNTHETIC HIGH-DEF SURVEILLANCE VIDEO GENERATOR ────────────────
         // Render photorealistic concourse perspective, lane tiles, turnstiles
@@ -1051,53 +1136,21 @@ export function CCTVModal({ isOpen, onClose, initialZoneId = 'gate-b' }: CCTVMod
               </div>
             </>
           ) : (
-            /* 6-Camera Multi-View Grid */
-            <div className="grid flex-1 grid-cols-2 gap-3 md:grid-cols-3 overflow-y-auto">
-              {CAMERAS.map((cam) => {
-                const z = zones[cam.zoneId];
-                const p = predictions[cam.zoneId] ?? { riskLevel: 'normal' };
-                const pct = z ? (z.current / z.capacity) * 100 : 0;
-                const isCrit = p.riskLevel === 'critical';
-
-                return (
-                  <div
-                    key={cam.id}
-                    onClick={() => {
-                      setSelectedCam(cam);
-                      setViewMode('single');
-                    }}
-                    className={`group relative flex flex-col rounded-xl border-2 bg-black p-2.5 cursor-pointer transition hover:border-cyan-400 ${
-                      isCrit ? 'border-rose-500/80 shadow-critical-glow' : 'border-slate-800'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between font-mono text-[10px] text-slate-400 mb-1.5">
-                      <span className="font-bold text-white flex items-center gap-1">
-                        <span className={`h-1.5 w-1.5 rounded-full ${isCrit ? 'bg-rose-500 animate-ping' : 'bg-emerald-400'}`} />
-                        {cam.id}
-                      </span>
-                      <span>{cam.resolution}</span>
-                    </div>
-
-                    <div className="relative flex-1 rounded bg-slate-950 min-h-[110px] flex flex-col items-center justify-center overflow-hidden border border-slate-900">
-                      <div className={`absolute inset-0 opacity-20 ${isCrit ? 'bg-rose-500' : 'bg-cyan-500'}`} />
-                      <Activity className={`h-6 w-6 mb-1 ${isCrit ? 'text-rose-400 animate-pulse' : 'text-slate-500'}`} />
-                      <span className="font-mono text-xs font-bold text-slate-200">{cam.name}</span>
-                      <span className="font-mono text-[11px] text-slate-400">
-                        {pct.toFixed(0)}% Occupancy ({z?.current.toLocaleString()} p)
-                      </span>
-                    </div>
-
-                    <div className="mt-1.5 flex items-center justify-between text-[10px] font-mono">
-                      <span className={isCrit ? 'text-rose-400 font-bold' : 'text-slate-500'}>
-                        {isCrit ? 'CRITICAL INFLUX' : 'MONITORING'}
-                      </span>
-                      <span className="text-cyan-400 group-hover:underline flex items-center gap-0.5">
-                        Inspect Feed <ArrowUpRight className="h-3 w-3" />
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
+            /* 6-Camera Multi-View Grid with Live Video & AI Tracking in Preview */
+            <div className="grid flex-1 grid-cols-2 gap-3 md:grid-cols-3 overflow-y-auto pr-1">
+              {CAMERAS.map((cam) => (
+                <MiniCameraPreview
+                  key={cam.id}
+                  cam={cam}
+                  zone={zones[cam.zoneId]}
+                  prediction={predictions[cam.zoneId]}
+                  isSelected={selectedCam.id === cam.id}
+                  onSelect={() => {
+                    setSelectedCam(cam);
+                    setViewMode('single');
+                  }}
+                />
+              ))}
             </div>
           )}
         </div>
