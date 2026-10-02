@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Camera,
   Maximize2,
@@ -12,9 +12,20 @@ import {
   Video,
   VideoOff,
   AlertCircle,
+  Upload,
+  Play,
+  Pause,
+  RotateCcw,
+  Sparkles,
+  ShieldAlert,
+  Cpu,
+  ArrowUpRight,
+  Radio,
+  Compass,
+  Users,
 } from 'lucide-react';
 import { useCommandCenter } from '@/state/CommandCenterProvider';
-import type { ZoneId } from '@/types';
+import type { ZoneId, VisionTrackedPerson, RiskLevel } from '@/types';
 
 interface CCTVModalProps {
   isOpen: boolean;
@@ -32,31 +43,74 @@ interface CameraConfig {
 }
 
 const CAMERAS: CameraConfig[] = [
+  { id: 'CAM-GB-02', zoneId: 'gate-b', name: 'Gate B Main Influx', type: 'Overhead AI Density & Optical Flow', resolution: '4K UHD', fps: 60 },
   { id: 'CAM-GA-01', zoneId: 'gate-a', name: 'Gate A Turnstiles', type: 'Stereoscopic Optical', resolution: '1080p', fps: 60 },
-  { id: 'CAM-GB-02', zoneId: 'gate-b', name: 'Gate B Main Influx', type: 'Overhead AI Density', resolution: '4K UHD', fps: 60 },
   { id: 'CAM-GC-03', zoneId: 'gate-c', name: 'Gate C Fast-Track', type: 'Optical Flow Matrix', resolution: '1080p', fps: 60 },
   { id: 'CAM-AR-04', zoneId: 'main-arena', name: 'Arena Concourse', type: 'LIDAR Spatial Mesh', resolution: '1440p', fps: 30 },
   { id: 'CAM-FC-05', zoneId: 'food-court', name: 'Food Court North', type: 'Thermal FLIR Grid', resolution: '720p', fps: 30 },
   { id: 'CAM-PK-06', zoneId: 'parking', name: 'Parking Transit Hub', type: 'Perimeter Optical', resolution: '1080p', fps: 30 },
 ];
 
+type VideoSourceType = 'demo_gate' | 'demo_concourse' | 'custom' | 'webcam';
+
+interface InternalPedestrian {
+  id: number;
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  targetX: number;
+  targetY: number;
+  boxW: number;
+  boxH: number;
+  conf: number;
+  risk: RiskLevel;
+  lane: number;
+  speed: number;
+  color: string;
+}
+
+interface DetectionLogEntry {
+  id: string;
+  time: string;
+  pedId: number;
+  action: string;
+  confidence: number;
+  velocity: string;
+  risk: RiskLevel;
+}
+
 export function CCTVModal({ isOpen, onClose, initialZoneId = 'gate-b' }: CCTVModalProps) {
-  const { zones, predictions } = useCommandCenter();
+  const { zones, predictions, updateCCTVVisionData } = useCommandCenter();
 
   const [selectedCam, setSelectedCam] = useState<CameraConfig>(
-    CAMERAS.find((c) => c.zoneId === initialZoneId) ?? CAMERAS[1]
+    CAMERAS.find((c) => c.zoneId === initialZoneId) ?? CAMERAS[0]
   );
   const [viewMode, setViewMode] = useState<'single' | 'grid'>('single');
+  const [sourceType, setSourceType] = useState<VideoSourceType>('demo_gate');
+  const [isPlaying, setIsPlaying] = useState(true);
   const [showBoxes, setShowBoxes] = useState(true);
   const [showHeatmap, setShowHeatmap] = useState(true);
   const [thermalMode, setThermalMode] = useState(false);
-  const [useWebcam, setUseWebcam] = useState(false);
+  const [showTripwire, setShowTripwire] = useState(true);
+  const [customVideoName, setCustomVideoName] = useState<string | null>(null);
+  const [customVideoUrl, setCustomVideoUrl] = useState<string | null>(null);
   const [webcamError, setWebcamError] = useState<string | null>(null);
   const [timeStr, setTimeStr] = useState('');
+
+  // Live AI Telemetry States
+  const [peopleCount, setPeopleCount] = useState(44);
+  const [flowRate, setFlowRate] = useState(2.6);
+  const [densityFruin, setDensityFruin] = useState(2.8);
+  const [tripwireCount, setTripwireCount] = useState(1480);
+  const [detectionLogs, setDetectionLogs] = useState<DetectionLogEntry[]>([]);
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const pedestriansRef = useRef<InternalPedestrian[]>([]);
+  const frameCountRef = useRef(0);
 
   // Sync selected camera if initialZoneId changes when modal opens
   useEffect(() => {
@@ -68,7 +122,7 @@ export function CCTVModal({ isOpen, onClose, initialZoneId = 'gate-b' }: CCTVMod
 
   // Handle webcam stream start/stop
   useEffect(() => {
-    if (!isOpen || !useWebcam) {
+    if (!isOpen || sourceType !== 'webcam') {
       if (streamRef.current) {
         streamRef.current.getTracks().forEach((track) => track.stop());
         streamRef.current = null;
@@ -87,9 +141,9 @@ export function CCTVModal({ isOpen, onClose, initialZoneId = 'gate-b' }: CCTVMod
         }
       })
       .catch((err) => {
-        console.warn('Webcam permission or device error:', err);
-        setWebcamError('Webcam access was denied or device is not available.');
-        setUseWebcam(false);
+        console.warn('Webcam permission error:', err);
+        setWebcamError('Webcam access was denied or device not found. Reverted to Demo Video.');
+        setSourceType('demo_gate');
       });
 
     return () => {
@@ -98,9 +152,9 @@ export function CCTVModal({ isOpen, onClose, initialZoneId = 'gate-b' }: CCTVMod
         streamRef.current = null;
       }
     };
-  }, [isOpen, useWebcam]);
+  }, [isOpen, sourceType]);
 
-  // High-precision clock with milliseconds
+  // Precision clock with milliseconds
   useEffect(() => {
     if (!isOpen) return;
     const interval = setInterval(() => {
@@ -111,7 +165,60 @@ export function CCTVModal({ isOpen, onClose, initialZoneId = 'gate-b' }: CCTVMod
     return () => clearInterval(interval);
   }, [isOpen]);
 
-  // Canvas animation for simulated crowd vision + webcam overlay
+  // Handle custom video upload
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (customVideoUrl) {
+      URL.revokeObjectURL(customVideoUrl);
+    }
+
+    const url = URL.createObjectURL(file);
+    setCustomVideoUrl(url);
+    setCustomVideoName(file.name);
+    setSourceType('custom');
+
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+      videoRef.current.src = url;
+      videoRef.current.play().catch(() => {});
+      setIsPlaying(true);
+    }
+  };
+
+  // Initialize simulated pedestrians pool based on zone occupancy
+  const initPedestrians = useCallback((count: number, width: number, height: number) => {
+    const pList: InternalPedestrian[] = [];
+    const colors = ['#38bdf8', '#818cf8', '#a78bfa', '#f472b6', '#34d399', '#fbbf24', '#f87171'];
+
+    for (let i = 0; i < count; i++) {
+      const lane = i % 4;
+      const startX = 60 + Math.random() * (width - 120);
+      const startY = height * 0.15 + Math.random() * (height * 0.75);
+      const speed = 0.8 + Math.random() * 1.6;
+
+      pList.push({
+        id: 100 + i,
+        x: startX,
+        y: startY,
+        vx: (Math.random() - 0.45) * 1.2,
+        vy: speed * (0.8 + Math.random() * 0.4),
+        targetX: startX + (Math.random() - 0.5) * 80,
+        targetY: startY + 60,
+        boxW: 24 + (startY / height) * 18,
+        boxH: 48 + (startY / height) * 36,
+        conf: 0.94 + Math.random() * 0.055,
+        risk: 'normal',
+        lane,
+        speed,
+        color: colors[i % colors.length],
+      });
+    }
+    pedestriansRef.current = pList;
+  }, []);
+
+  // Main Computer Vision & Video Canvas Rendering Loop
   useEffect(() => {
     if (!isOpen || viewMode === 'grid') return;
     const canvas = canvasRef.current;
@@ -121,280 +228,327 @@ export function CCTVModal({ isOpen, onClose, initialZoneId = 'gate-b' }: CCTVMod
 
     let animId: number;
     const currentZone = zones[selectedCam.zoneId];
-    const risk = predictions[selectedCam.zoneId].riskLevel;
+    const risk = predictions[selectedCam.zoneId]?.riskLevel ?? 'normal';
     const pct = currentZone ? currentZone.current / currentZone.capacity : 0.5;
 
-    // Offscreen canvas for optical motion & head tracking (64x36)
-    const offCanvas = document.createElement('canvas');
-    offCanvas.width = 64;
-    offCanvas.height = 36;
-    const offCtx = offCanvas.getContext('2d', { willReadFrequently: true });
+    // Determine target headcount from zone risk
+    const targetHeadcount = Math.min(
+      65,
+      Math.max(22, Math.round(pct * 60) + (selectedCam.zoneId === 'gate-b' ? 8 : 0))
+    );
 
-    let prevData: Uint8ClampedArray | null = null;
-    let trackedX = canvas.width / 2;
-    let trackedY = canvas.height * 0.45;
-    let targetX = canvas.width / 2;
-    let targetY = canvas.height * 0.45;
-    let targetW = 200;
-    let targetH = 260;
-    let trackedW = 200;
-    let trackedH = 260;
-    let frameCount = 0;
+    if (pedestriansRef.current.length === 0 || Math.abs(pedestriansRef.current.length - targetHeadcount) > 15) {
+      initPedestrians(targetHeadcount, canvas.width, canvas.height);
+    }
 
-    // Generate simulated pedestrian tracks based on occupancy
-    const personCount = Math.min(65, Math.max(15, Math.round(pct * 60)));
-    const pedestrians = Array.from({ length: personCount }, (_, i) => ({
-      id: 1000 + i,
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height,
-      vx: (Math.random() - 0.5) * 1.4 + (selectedCam.zoneId === 'gate-b' ? 0.8 : 0.2),
-      vy: (Math.random() - 0.5) * 0.9,
-      size: 14 + Math.random() * 8,
-      conf: 0.95 + Math.random() * 0.045,
-    }));
+    const tripwireY = canvas.height * 0.58;
 
     const render = () => {
-      if (useWebcam && videoRef.current && videoRef.current.readyState >= 2) {
-        // Draw real webcam frames
+      frameCountRef.current++;
+      const isCustomVideo = sourceType === 'custom' && customVideoUrl && videoRef.current;
+      const isWebcamVideo = sourceType === 'webcam' && streamRef.current && videoRef.current;
+
+      // ── STEP 1: RENDER VIDEO BACKGROUND ──────────────────────────────────
+      if ((isCustomVideo || isWebcamVideo) && videoRef.current && videoRef.current.readyState >= 2) {
+        // Draw real custom video or webcam
         ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
-
-        if (thermalMode) {
-          ctx.fillStyle = 'rgba(147, 51, 234, 0.35)';
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
-        }
-
-        // Live Optical Motion & Head Centroid Tracking
-        frameCount++;
-        if (offCtx && frameCount % 2 === 0) {
-          offCtx.drawImage(videoRef.current, 0, 0, 64, 36);
-          const imgData = offCtx.getImageData(0, 0, 64, 36);
-          const data = imgData.data;
-
-          let totalWeight = 0;
-          let sumX = 0;
-          let sumY = 0;
-          let minX = 64;
-          let maxX = 0;
-          let minY = 36;
-          let maxY = 0;
-
-          for (let y = 0; y < 36; y++) {
-            for (let x = 0; x < 64; x++) {
-              const i = (y * 64 + x) * 4;
-              const r = data[i];
-              const g = data[i + 1];
-              const b = data[i + 2];
-
-              // Motion difference
-              let motion = 0;
-              if (prevData) {
-                const diffR = Math.abs(r - prevData[i]);
-                const diffG = Math.abs(g - prevData[i + 1]);
-                const diffB = Math.abs(b - prevData[i + 2]);
-                motion = diffR + diffG + diffB;
-              }
-
-              // Skin/face tone heuristic (RGB color space)
-              const isSkin = r > 65 && g > 40 && b > 20 && r > g && (r - b) > 15 && Math.abs(r - g) > 10;
-
-              let weight = 0;
-              if (motion > 35) weight += motion * 1.6;
-              if (isSkin) weight += 75;
-
-              // Weight upper/middle half more (where the head is in a webcam)
-              if (y < 28) weight *= 1.4;
-
-              if (weight > 25) {
-                totalWeight += weight;
-                sumX += x * weight;
-                sumY += y * weight;
-                if (x < minX) minX = x;
-                if (x > maxX) maxX = x;
-                if (y < minY) minY = y;
-                if (y > maxY) maxY = y;
-              }
-            }
-          }
-
-          if (totalWeight > 600) {
-            const normX = sumX / totalWeight;
-            const normY = sumY / totalWeight;
-            targetX = (normX / 64) * canvas.width;
-            targetY = (normY / 36) * canvas.height;
-
-            const spanX = Math.max(10, maxX - minX);
-            const spanY = Math.max(14, maxY - minY);
-            targetW = Math.max(150, Math.min(300, (spanX / 64) * canvas.width * 1.5));
-            targetH = Math.max(190, Math.min(360, (spanY / 36) * canvas.height * 1.5));
-          }
-
-          prevData = new Uint8ClampedArray(data);
-        }
-
-        // Smooth physical interpolation to glide the box across the canvas
-        trackedX += (targetX - trackedX) * 0.22;
-        trackedY += (targetY - trackedY) * 0.22;
-        trackedW += (targetW - trackedW) * 0.15;
-        trackedH += (targetH - trackedH) * 0.15;
-
-        // Draw live face/human tracking target box over tracked position
-        if (showBoxes) {
-          const bx = trackedX - trackedW / 2;
-          const by = trackedY - trackedH / 2;
-
-          const boxColor = thermalMode ? '#facc15' : '#10b981';
-          ctx.strokeStyle = boxColor;
-          ctx.lineWidth = 2;
-          ctx.strokeRect(bx, by, trackedW, trackedH);
-
-          // Corner reticles
-          const clen = 12;
-          ctx.lineWidth = 3.5;
-          ctx.beginPath();
-          // Top-left
-          ctx.moveTo(bx, by + clen);
-          ctx.lineTo(bx, by);
-          ctx.lineTo(bx + clen, by);
-          // Top-right
-          ctx.moveTo(bx + trackedW - clen, by);
-          ctx.lineTo(bx + trackedW, by);
-          ctx.lineTo(bx + trackedW, by + clen);
-          // Bottom-left
-          ctx.moveTo(bx, by + trackedH - clen);
-          ctx.lineTo(bx, by + trackedH);
-          ctx.lineTo(bx + clen, by + trackedH);
-          // Bottom-right
-          ctx.moveTo(bx + trackedW - clen, by + trackedH);
-          ctx.lineTo(bx + trackedW, by + trackedH);
-          ctx.lineTo(bx + trackedW, by + trackedH - clen);
-          ctx.stroke();
-
-          // Target reticle crosshair in center of tracked head
-          ctx.strokeStyle = 'rgba(56, 189, 248, 0.8)';
-          ctx.lineWidth = 1.2;
-          ctx.beginPath();
-          ctx.arc(trackedX, trackedY, 24, 0, Math.PI * 2);
-          ctx.moveTo(trackedX - 34, trackedY);
-          ctx.lineTo(trackedX + 34, trackedY);
-          ctx.moveTo(trackedX, trackedY - 34);
-          ctx.lineTo(trackedX, trackedY + 34);
-          ctx.stroke();
-
-          ctx.font = '11px monospace';
-          ctx.fillStyle = boxColor;
-          ctx.fillText(`HUMAN_TRACK // ID#0841 [CONF 99.4%]`, bx, by - 8);
-          ctx.fillStyle = '#38bdf8';
-          ctx.fillText(`HEAD_LOCK: ACTIVE [X:${Math.round(trackedX)} Y:${Math.round(trackedY)}]`, bx, by + trackedH + 16);
-        }
       } else {
-        // Render digital simulation
-        ctx.fillStyle = thermalMode ? '#1e1035' : '#080c14';
+        // ── SYNTHETIC HIGH-DEF SURVEILLANCE VIDEO GENERATOR ────────────────
+        // Render photorealistic concourse perspective, lane tiles, turnstiles
+        ctx.fillStyle = '#090d16';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // Grid floor lines
-        ctx.strokeStyle = thermalMode ? 'rgba(147, 51, 234, 0.15)' : 'rgba(56, 189, 248, 0.08)';
+        // Perspective concourse pavement grid
+        ctx.strokeStyle = '#1e293b';
         ctx.lineWidth = 1;
-        const step = 40;
-        for (let x = 0; x < canvas.width; x += step) {
+        const horizonY = canvas.height * 0.18;
+
+        for (let x = 0; x <= canvas.width; x += 64) {
           ctx.beginPath();
-          ctx.moveTo(x, 0);
+          ctx.moveTo(canvas.width * 0.5 + (x - canvas.width * 0.5) * 0.25, horizonY);
           ctx.lineTo(x, canvas.height);
           ctx.stroke();
         }
-        for (let y = 0; y < canvas.height; y += step) {
+
+        for (let y = horizonY; y <= canvas.height; y += 38) {
           ctx.beginPath();
           ctx.moveTo(0, y);
           ctx.lineTo(canvas.width, y);
           ctx.stroke();
         }
 
-        // Density Heatmap
-        if (showHeatmap) {
-          const chokeX = canvas.width * 0.65;
-          const chokeY = canvas.height * 0.5;
-          const rad = canvas.width * (0.28 + pct * 0.18);
-          const grad = ctx.createRadialGradient(chokeX, chokeY, 10, chokeX, chokeY, rad);
+        // Turnstile Gate Barrier Columns
+        const turnstileCount = 4;
+        const spacing = (canvas.width - 240) / turnstileCount;
+        for (let t = 0; t <= turnstileCount; t++) {
+          const gx = 120 + t * spacing;
+          // Barrier stanchion
+          ctx.fillStyle = '#334155';
+          ctx.fillRect(gx - 6, tripwireY - 45, 12, 55);
+          ctx.fillStyle = '#0ea5e9';
+          ctx.fillRect(gx - 4, tripwireY - 42, 8, 4);
 
-          if (thermalMode) {
-            grad.addColorStop(0, 'rgba(255, 255, 255, 0.6)');
-            grad.addColorStop(0.3, 'rgba(239, 68, 68, 0.45)');
-            grad.addColorStop(0.7, 'rgba(147, 51, 234, 0.25)');
-            grad.addColorStop(1, 'transparent');
-          } else if (risk === 'critical') {
-            grad.addColorStop(0, 'rgba(239, 68, 68, 0.55)');
-            grad.addColorStop(0.4, 'rgba(249, 115, 22, 0.35)');
-            grad.addColorStop(0.8, 'rgba(234, 179, 8, 0.15)');
-            grad.addColorStop(1, 'transparent');
-          } else if (risk === 'high' || risk === 'warning') {
-            grad.addColorStop(0, 'rgba(249, 115, 22, 0.45)');
-            grad.addColorStop(0.5, 'rgba(234, 179, 8, 0.25)');
-            grad.addColorStop(1, 'transparent');
-          } else {
-            grad.addColorStop(0, 'rgba(16, 185, 129, 0.35)');
-            grad.addColorStop(0.6, 'rgba(56, 189, 248, 0.15)');
-            grad.addColorStop(1, 'transparent');
+          // Gate Number label
+          if (t < turnstileCount) {
+            ctx.font = '10px monospace';
+            ctx.fillStyle = '#64748b';
+            ctx.fillText(`LANE 0${t + 1}`, gx + spacing * 0.3, tripwireY - 25);
           }
-
-          ctx.fillStyle = grad;
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
         }
 
-        // Pedestrians & Bounding boxes
-        for (const p of pedestrians) {
-          p.x += p.vx;
-          p.y += p.vy;
+        // Security Canopy Lighting Glow
+        const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+        gradient.addColorStop(0, 'rgba(14, 165, 233, 0.08)');
+        gradient.addColorStop(0.6, 'rgba(15, 23, 42, 0.0)');
+        gradient.addColorStop(1, 'rgba(2, 6, 23, 0.4)');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-          if (p.x < 10) p.x = canvas.width - 20;
-          if (p.x > canvas.width - 10) p.x = 20;
-          if (p.y < 10) p.y = canvas.height - 20;
-          if (p.y > canvas.height - 10) p.y = 20;
+        // Draw Walking Pedestrian Silhouettes
+        const peds = pedestriansRef.current;
+        for (const p of peds) {
+          if (isPlaying) {
+            p.y += p.vy;
+            p.x += p.vx;
 
+            // Boundary bounce
+            if (p.x < 50) { p.x = 50; p.vx *= -1; }
+            if (p.x > canvas.width - 50) { p.x = canvas.width - 50; p.vx *= -1; }
+
+            // Loop back to top once passed turnstile
+            if (p.y > canvas.height + 40) {
+              p.y = horizonY + 10;
+              p.x = 70 + Math.random() * (canvas.width - 140);
+              p.vy = (0.9 + Math.random() * 1.5) * (risk === 'critical' ? 1.6 : 1.1);
+            }
+          }
+
+          // Depth scaling
+          const depth = Math.max(0.4, (p.y - horizonY) / (canvas.height - horizonY));
+          const w = 18 * depth;
+          const h = 42 * depth;
+          p.boxW = w * 1.5;
+          p.boxH = h * 1.25;
+
+          // Pedestrian Shadow
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
           ctx.beginPath();
-          ctx.arc(p.x, p.y, p.size / 2.5, 0, Math.PI * 2);
-          ctx.fillStyle = thermalMode
-            ? 'rgba(254, 240, 138, 0.85)'
-            : risk === 'critical'
-            ? 'rgba(252, 165, 165, 0.7)'
-            : 'rgba(226, 232, 240, 0.65)';
+          ctx.ellipse(p.x, p.y + h * 0.48, w * 0.8, w * 0.35, 0, 0, Math.PI * 2);
           ctx.fill();
 
-          if (showBoxes) {
-            const w = p.size * 1.8;
-            const h = p.size * 2.8;
-            const bx = p.x - w / 2;
-            const by = p.y - h / 2;
+          // Pedestrian Body Silhouette
+          ctx.fillStyle = p.color;
+          ctx.beginPath();
+          ctx.ellipse(p.x, p.y + h * 0.1, w * 0.45, h * 0.35, 0, 0, Math.PI * 2);
+          ctx.fill();
 
-            const boxColor = thermalMode
-              ? '#facc15'
-              : risk === 'critical'
-              ? '#ef4444'
-              : risk === 'high'
-              ? '#f97316'
-              : '#10b981';
-
-            ctx.strokeStyle = boxColor;
-            ctx.lineWidth = 1.2;
-            ctx.strokeRect(bx, by, w, h);
-
-            const clen = 4;
-            ctx.lineWidth = 2.5;
-            ctx.beginPath();
-            ctx.moveTo(bx, by + clen);
-            ctx.lineTo(bx, by);
-            ctx.lineTo(bx + clen, by);
-            ctx.stroke();
-
-            ctx.font = '8px monospace';
-            ctx.fillStyle = boxColor;
-            ctx.fillText(`ID#${p.id} ${(p.conf * 100).toFixed(0)}%`, bx, by - 3);
-          }
+          // Head
+          ctx.fillStyle = '#fde047';
+          ctx.beginPath();
+          ctx.arc(p.x, p.y - h * 0.32, w * 0.28, 0, Math.PI * 2);
+          ctx.fill();
         }
       }
 
-      // CRT Scanline effect
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.12)';
-      for (let y = 0; y < canvas.height; y += 3) {
+      // ── STEP 2: THERMAL FLIR FILTER ──────────────────────────────────────
+      if (thermalMode) {
+        ctx.fillStyle = 'rgba(147, 51, 234, 0.28)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Invert luminance slightly for FLIR signature
+        ctx.fillStyle = 'rgba(234, 88, 12, 0.15)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
+
+      // ── STEP 3: AI DENSITY HEATMAP LAYER ─────────────────────────────────
+      if (showHeatmap) {
+        const peds = pedestriansRef.current;
+        for (const p of peds) {
+          const rad = p.boxW * 2.8;
+          const hgrad = ctx.createRadialGradient(p.x, p.y, 4, p.x, p.y, rad);
+          const isCrowded = risk === 'critical' || p.risk === 'critical';
+
+          if (isCrowded) {
+            hgrad.addColorStop(0, 'rgba(239, 68, 68, 0.45)');
+            hgrad.addColorStop(0.5, 'rgba(245, 158, 11, 0.22)');
+            hgrad.addColorStop(1, 'rgba(239, 68, 68, 0)');
+          } else {
+            hgrad.addColorStop(0, 'rgba(16, 185, 129, 0.38)');
+            hgrad.addColorStop(0.5, 'rgba(56, 189, 248, 0.18)');
+            hgrad.addColorStop(1, 'rgba(16, 185, 129, 0)');
+          }
+
+          ctx.fillStyle = hgrad;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, rad, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      // ── STEP 4: INGRESS COUNTING TRIPWIRE ────────────────────────────────
+      if (showTripwire) {
+        ctx.strokeStyle = '#06b6d4';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([8, 4]);
+        ctx.beginPath();
+        ctx.moveTo(40, tripwireY);
+        ctx.lineTo(canvas.width - 40, tripwireY);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Tripwire HUD Pill
+        ctx.fillStyle = 'rgba(6, 182, 212, 0.2)';
+        ctx.fillRect(45, tripwireY - 18, 185, 16);
+        ctx.strokeStyle = '#06b6d4';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(45, tripwireY - 18, 185, 16);
+
+        ctx.font = '10px monospace';
+        ctx.fillStyle = '#22d3ee';
+        ctx.fillText(`▲ INGRESS TRIPWIRE // COUNT: ${tripwireCount}`, 52, tripwireY - 6);
+      }
+
+      // ── STEP 5: COMPUTER VISION BOUNDING BOXES & VELOCITY VECTORS ────────
+      const visionTrackedList: VisionTrackedPerson[] = [];
+      const peds = pedestriansRef.current;
+
+      for (let i = 0; i < peds.length; i++) {
+        const p = peds[i];
+
+        // Check local density / proximity
+        let neighbors = 0;
+        for (let j = 0; j < peds.length; j++) {
+          if (i !== j) {
+            const dx = p.x - peds[j].x;
+            const dy = p.y - peds[j].y;
+            if (dx * dx + dy * dy < 2500) neighbors++;
+          }
+        }
+
+        const pedRisk: RiskLevel =
+          neighbors >= 4 || risk === 'critical' ? 'critical' : neighbors >= 2 ? 'warning' : 'normal';
+        p.risk = pedRisk;
+
+        const boxColor =
+          pedRisk === 'critical' ? '#ef4444' : pedRisk === 'warning' ? '#f59e0b' : '#10b981';
+
+        const bx = p.x - p.boxW / 2;
+        const by = p.y - p.boxH / 2;
+
+        if (showBoxes) {
+          // Bounding Box
+          ctx.strokeStyle = boxColor;
+          ctx.lineWidth = 1.8;
+          ctx.strokeRect(bx, by, p.boxW, p.boxH);
+
+          // Corner Reticles
+          const clen = Math.min(6, p.boxW * 0.25);
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.moveTo(bx, by + clen);
+          ctx.lineTo(bx, by);
+          ctx.lineTo(bx + clen, by);
+          ctx.stroke();
+
+          // Target ID & Confidence Tag
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
+          ctx.fillRect(bx, by - 14, p.boxW + 12, 12);
+          ctx.font = '9px monospace';
+          ctx.fillStyle = boxColor;
+          ctx.fillText(`#${p.id} ${(p.conf * 100).toFixed(0)}%`, bx + 2, by - 4);
+
+          // Velocity Vector Arrow
+          ctx.strokeStyle = boxColor;
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.moveTo(p.x, p.y);
+          ctx.lineTo(p.x + p.vx * 12, p.y + p.vy * 12);
+          ctx.stroke();
+        }
+
+        // Add to vision tracked export for Map
+        visionTrackedList.push({
+          id: p.id,
+          x: (p.x / canvas.width) * 100,
+          y: (p.y / canvas.height) * 100,
+          vx: p.vx,
+          vy: p.vy,
+          speed: p.speed,
+          risk: pedRisk,
+          confidence: p.conf,
+          boxWidth: p.boxW,
+          boxHeight: p.boxH,
+        });
+
+        // Trigger tripwire crossings
+        if (isPlaying && Math.abs(p.y - tripwireY) < 2) {
+          setTripwireCount((c) => c + 1);
+        }
+      }
+
+      // ── STEP 6: CRT SCANLINE & SENSOR RETICLE OVERLAY ────────────────────
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
+      for (let y = 0; y < canvas.height; y += 4) {
         ctx.fillRect(0, y, canvas.width, 1);
+      }
+
+      // Crosshair center grid
+      ctx.strokeStyle = 'rgba(148, 163, 184, 0.15)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(canvas.width / 2, 0);
+      ctx.lineTo(canvas.width / 2, canvas.height);
+      ctx.moveTo(0, canvas.height / 2);
+      ctx.lineTo(canvas.width, canvas.height / 2);
+      ctx.stroke();
+
+      // Push telemetry sync to CommandCenterProvider for EventMap
+      if (frameCountRef.current % 12 === 0) {
+        const computedDensity = Number(((visionTrackedList.length / 50) * 3.2).toFixed(1));
+        const computedFlow = Number((1.8 + (risk === 'critical' ? 1.4 : 0.4)).toFixed(1));
+        const computedSurge = risk === 'critical' ? 88 : risk === 'high' ? 74 : 32;
+
+        setPeopleCount(visionTrackedList.length);
+        setDensityFruin(computedDensity);
+        setFlowRate(computedFlow);
+
+        updateCCTVVisionData({
+          isActive: true,
+          zoneId: selectedCam.zoneId,
+          cameraName: selectedCam.name,
+          sourceType: sourceType === 'webcam' ? 'webcam' : sourceType === 'custom' ? 'custom_video' : 'demo_video',
+          people: visionTrackedList,
+          count: visionTrackedList.length,
+          densityPerM2: computedDensity,
+          inflowRatePerSec: computedFlow,
+          surgeProbability: computedSurge,
+          aiObservations: [
+            risk === 'critical'
+              ? '🚨 CRITICAL SURGE: Rapid pedestrian compression detected at Gate B Turnstile 3.'
+              : '⚡ Ingress velocity within normal parameters across optical gate lines.',
+            `Spatial density: ${computedDensity} p/m² (${computedDensity > 3.0 ? 'Fruin Level E/F CRITICAL' : 'Fruin Level B/C Normal'}).`,
+            'Dynamic diversion path recommended via Gate C Auxiliary Corridor.',
+          ],
+        });
+
+        // Add live detection log entry
+        if (Math.random() < 0.25) {
+          const sample = visionTrackedList[Math.floor(Math.random() * visionTrackedList.length)];
+          if (sample) {
+            setDetectionLogs((prev) => [
+              {
+                id: `log-${Date.now()}-${sample.id}`,
+                time: new Date().toLocaleTimeString(),
+                pedId: sample.id,
+                action: sample.risk === 'critical' ? 'Chokepoint Bottleneck Detected' : 'Turnstile Ingress Cleared',
+                confidence: sample.confidence,
+                velocity: `${(sample.speed * 1.1).toFixed(1)} m/s`,
+                risk: sample.risk,
+              },
+              ...prev.slice(0, 18),
+            ]);
+          }
+        }
       }
 
       animId = requestAnimationFrame(render);
@@ -403,63 +557,124 @@ export function CCTVModal({ isOpen, onClose, initialZoneId = 'gate-b' }: CCTVMod
     render();
 
     return () => cancelAnimationFrame(animId);
-  }, [isOpen, viewMode, selectedCam, showBoxes, showHeatmap, thermalMode, useWebcam, zones, predictions]);
+  }, [
+    isOpen,
+    viewMode,
+    selectedCam,
+    sourceType,
+    isPlaying,
+    showBoxes,
+    showHeatmap,
+    thermalMode,
+    showTripwire,
+    customVideoUrl,
+    tripwireCount,
+    zones,
+    predictions,
+    initPedestrians,
+    updateCCTVVisionData,
+  ]);
 
   if (!isOpen) return null;
 
   const activeZone = zones[selectedCam.zoneId];
-  const activePred = predictions[selectedCam.zoneId];
-  const activePct = activeZone ? (activeZone.current / activeZone.capacity) * 100 : 0;
-  const densityVal = (activePct / 32).toFixed(1);
+  const activePred = predictions[selectedCam.zoneId] ?? { riskLevel: 'normal' };
+  const isCritical = activePred.riskLevel === 'critical';
 
   return (
-    <div data-theme="dark" className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-3 backdrop-blur-md animate-in fade-in duration-200">
-      {/* Hidden Video element for real webcam feed ingestion */}
-      <video ref={videoRef} autoPlay playsInline muted className="hidden" />
+    <div
+      data-theme="dark"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-3 backdrop-blur-md animate-in fade-in duration-200"
+    >
+      {/* Hidden file input for custom video upload */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileUpload}
+        accept="video/mp4,video/webm,video/ogg"
+        className="hidden"
+      />
 
-      <div className="relative flex h-[92vh] w-full max-w-6xl flex-col rounded-2xl border border-slate-700 bg-slate-950 text-slate-100 shadow-2xl overflow-hidden">
+      {/* Video element for webcam or uploaded video ingestion */}
+      <video
+        ref={videoRef}
+        autoPlay
+        playsInline
+        loop
+        muted
+        className="hidden"
+      />
+
+      <div className="relative flex h-[94vh] w-full max-w-7xl flex-col rounded-2xl border border-slate-700 bg-slate-950 text-slate-100 shadow-2xl overflow-hidden">
         {/* Top Header */}
-        <div className="flex items-center justify-between border-b border-slate-800 bg-slate-900/70 px-5 py-3.5">
+        <div className="flex flex-wrap items-center justify-between border-b border-slate-800 bg-slate-900/80 px-5 py-3 gap-3">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-info/20 text-info">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-cyan-500/20 text-cyan-400 border border-cyan-500/30">
               <Camera className="h-5 w-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="font-display text-base font-bold text-ink tracking-wide">
+                <h2 className="font-display text-base font-bold text-white tracking-wide">
                   SurgeGuard Vision // Automated CCTV Intelligence
                 </h2>
                 <span className="flex items-center gap-1 rounded-full border border-rose-500/40 bg-rose-500/10 px-2 py-0.5 font-mono text-[10px] font-semibold text-rose-400">
                   <span className="h-1.5 w-1.5 rounded-full bg-rose-500 animate-ping" />
                   REC ● 60 FPS
                 </span>
-                {useWebcam && (
-                  <span className="flex items-center gap-1 rounded-full border border-emerald-500/40 bg-emerald-500/20 px-2 py-0.5 font-mono text-[10px] font-semibold text-emerald-300">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping" />
-                    LIVE LAPTOP WEBCAM ACTIVE
-                  </span>
-                )}
+                <span className="rounded bg-sky-950/80 border border-sky-500/40 px-2 py-0.5 font-mono text-[10px] text-sky-300">
+                  MAP TRACKING SYNC: ON
+                </span>
               </div>
               <p className="text-xs text-slate-400">
-                Turnstile optical flow & overhead crowd density AI pipeline (YOLOv11-CrowdNet)
+                Multi-camera optical flow, turnstile pedestrian tracking & spatial density analysis (YOLOv11-CrowdNet)
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            {/* Real Webcam Toggle */}
-            <button
-              type="button"
-              onClick={() => setUseWebcam((prev) => !prev)}
-              className={`flex items-center gap-1.5 rounded-lg border px-3 py-1 text-xs font-mono font-semibold transition ${
-                useWebcam
-                  ? 'border-emerald-500 bg-emerald-500/20 text-emerald-300 shadow-sm'
-                  : 'border-slate-700 bg-slate-800 text-slate-300 hover:border-slate-600'
-              }`}
-            >
-              {useWebcam ? <Video className="h-3.5 w-3.5 text-emerald-400" /> : <VideoOff className="h-3.5 w-3.5 text-slate-400" />}
-              <span>{useWebcam ? 'Disconnect Webcam' : 'Use My Laptop Camera'}</span>
-            </button>
+          {/* Video Source & Controls */}
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Source Switcher Pills */}
+            <div className="flex rounded-lg border border-slate-700 bg-slate-900 p-0.5 text-xs font-mono">
+              <button
+                type="button"
+                onClick={() => setSourceType('demo_gate')}
+                className={`flex items-center gap-1 rounded px-2.5 py-1 transition ${
+                  sourceType === 'demo_gate'
+                    ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/40'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <Video className="h-3 w-3" />
+                Demo Video
+              </button>
+
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className={`flex items-center gap-1 rounded px-2.5 py-1 transition ${
+                  sourceType === 'custom'
+                    ? 'bg-purple-500/20 text-purple-300 font-bold border border-purple-500/40'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+                title="Upload any MP4 video from your PC to run AI tracking"
+              >
+                <Upload className="h-3 w-3" />
+                {customVideoName ? customVideoName.slice(0, 10) + '…' : 'Upload MP4'}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setSourceType((prev) => (prev === 'webcam' ? 'demo_gate' : 'webcam'))}
+                className={`flex items-center gap-1 rounded px-2.5 py-1 transition ${
+                  sourceType === 'webcam'
+                    ? 'bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/40'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                {sourceType === 'webcam' ? <Video className="h-3 w-3 text-emerald-400" /> : <VideoOff className="h-3 w-3 text-slate-400" />}
+                Webcam
+              </button>
+            </div>
 
             {/* View Switcher */}
             <div className="hidden sm:flex rounded-lg border border-slate-700 bg-slate-900 p-0.5 text-xs">
@@ -467,7 +682,7 @@ export function CCTVModal({ isOpen, onClose, initialZoneId = 'gate-b' }: CCTVMod
                 type="button"
                 onClick={() => setViewMode('single')}
                 className={`flex items-center gap-1 rounded px-2.5 py-1 font-medium transition ${
-                  viewMode === 'single' ? 'bg-slate-700 text-ink' : 'text-slate-400 hover:text-ink'
+                  viewMode === 'single' ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white'
                 }`}
               >
                 <Maximize2 className="h-3 w-3" />
@@ -477,18 +692,18 @@ export function CCTVModal({ isOpen, onClose, initialZoneId = 'gate-b' }: CCTVMod
                 type="button"
                 onClick={() => setViewMode('grid')}
                 className={`flex items-center gap-1 rounded px-2.5 py-1 font-medium transition ${
-                  viewMode === 'grid' ? 'bg-slate-700 text-ink' : 'text-slate-400 hover:text-ink'
+                  viewMode === 'grid' ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white'
                 }`}
               >
                 <Grid className="h-3 w-3" />
-                6-Camera Matrix
+                6-Cam Matrix
               </button>
             </div>
 
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-ink transition"
+              className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white transition"
             >
               <X className="h-5 w-5" />
             </button>
@@ -503,12 +718,12 @@ export function CCTVModal({ isOpen, onClose, initialZoneId = 'gate-b' }: CCTVMod
         )}
 
         {/* Camera Selector Pills Bar */}
-        <div className="flex items-center gap-2 overflow-x-auto border-b border-slate-800 bg-slate-900/40 px-5 py-2.5 scrollbar-none text-xs">
+        <div className="flex items-center gap-2 overflow-x-auto border-b border-slate-800 bg-slate-900/50 px-5 py-2 scrollbar-none text-xs">
           <span className="text-[11px] font-mono font-semibold uppercase text-slate-500 shrink-0 mr-1">
-            Camera Feeds:
+            Active Camera:
           </span>
           {CAMERAS.map((cam) => {
-            const p = predictions[cam.zoneId];
+            const p = predictions[cam.zoneId] ?? { riskLevel: 'normal' };
             const isSelected = selectedCam.id === cam.id;
             const isCrit = p.riskLevel === 'critical';
             const isHigh = p.riskLevel === 'high';
@@ -521,9 +736,9 @@ export function CCTVModal({ isOpen, onClose, initialZoneId = 'gate-b' }: CCTVMod
                   setSelectedCam(cam);
                   setViewMode('single');
                 }}
-                className={`flex items-center gap-2 rounded-lg border px-3 py-1.5 font-mono text-xs transition shrink-0 ${
+                className={`flex items-center gap-2 rounded-lg border px-3 py-1 font-mono text-xs transition shrink-0 ${
                   isSelected
-                    ? 'border-info/60 bg-info/15 text-white font-semibold shadow-sm'
+                    ? 'border-cyan-500/60 bg-cyan-500/15 text-white font-semibold shadow-sm'
                     : 'border-slate-800 bg-slate-900/60 text-slate-400 hover:border-slate-700 hover:text-slate-200'
                 }`}
               >
@@ -539,97 +754,273 @@ export function CCTVModal({ isOpen, onClose, initialZoneId = 'gate-b' }: CCTVMod
           })}
         </div>
 
-        {/* Main Feed Viewport */}
-        <div className="flex-1 overflow-hidden p-4 flex flex-col">
+        {/* Main Body: Video Feed Viewport + Automated CCTV Intelligence Section */}
+        <div className="flex flex-1 overflow-hidden p-3 gap-3">
           {viewMode === 'single' ? (
-            <div className="relative flex-1 rounded-2xl border-2 border-slate-800 bg-black overflow-hidden flex flex-col shadow-2xl">
-              {/* CCTV HUD Top Bar */}
-              <div className="absolute top-0 inset-x-0 z-20 flex items-center justify-between p-3.5 bg-gradient-to-b from-black/80 to-transparent font-mono text-xs">
-                <div className="flex items-center gap-3">
-                  <span className="rounded bg-rose-600/90 px-2 py-0.5 font-bold tracking-wider text-white text-[11px]">
-                    LIVE // {selectedCam.id}
-                  </span>
-                  <span className="text-slate-200 font-bold">{selectedCam.name.toUpperCase()}</span>
-                  <span className="text-slate-400">· {useWebcam ? 'REAL LAPTOP CAMERA STREAM' : selectedCam.type}</span>
-                </div>
-
-                <div className="flex items-center gap-4 text-emerald-400 font-bold">
-                  <span>{timeStr}</span>
-                  <span className="text-slate-400 font-normal">LATENCY: 14.8ms</span>
-                </div>
-              </div>
-
-              {/* Interactive Canvas Rendering */}
-              <canvas
-                ref={canvasRef}
-                width={960}
-                height={540}
-                className="h-full w-full object-cover"
-              />
-
-              {/* CCTV HUD Bottom Bar */}
-              <div className="absolute bottom-0 inset-x-0 z-20 flex flex-wrap items-center justify-between gap-3 p-3.5 bg-gradient-to-t from-black/90 via-black/50 to-transparent font-mono text-xs">
-                <div className="flex items-center gap-4">
-                  <div className="rounded bg-slate-900/80 border border-slate-700/80 px-2.5 py-1">
-                    <span className="text-slate-400 text-[10px]">CURRENT DENSITY: </span>
-                    <strong className={activePred.riskLevel === 'critical' ? 'text-rose-400 font-bold' : 'text-emerald-400'}>
-                      {densityVal} p/m²
-                    </strong>
-                    <span className="text-[10px] text-slate-500 ml-1">
-                      (Fruin Level {Number(densityVal) > 3.0 ? 'E/F Danger' : Number(densityVal) > 1.8 ? 'C Warning' : 'A Optimal'})
+            <>
+              {/* LEFT/CENTER: Interactive Video Player with AI Overlay */}
+              <div className="relative flex-1 rounded-2xl border-2 border-slate-800 bg-black overflow-hidden flex flex-col shadow-2xl">
+                {/* CCTV HUD Top Bar */}
+                <div className="absolute top-0 inset-x-0 z-20 flex items-center justify-between p-3 bg-gradient-to-b from-black/85 to-transparent font-mono text-xs">
+                  <div className="flex items-center gap-2.5">
+                    <span className="rounded bg-rose-600/90 px-2 py-0.5 font-bold tracking-wider text-white text-[11px]">
+                      LIVE // {selectedCam.id}
+                    </span>
+                    <span className="text-white font-bold">{selectedCam.name.toUpperCase()}</span>
+                    <span className="text-slate-400 text-[11px]">
+                      ·{' '}
+                      {sourceType === 'custom'
+                        ? `CUSTOM VIDEO: ${customVideoName ?? 'Local Video'}`
+                        : sourceType === 'webcam'
+                        ? 'LIVE WEBCAM INGESTION'
+                        : selectedCam.type}
                     </span>
                   </div>
 
-                  <div className="rounded bg-slate-900/80 border border-slate-700/80 px-2.5 py-1">
-                    <span className="text-slate-400 text-[10px]">HEADCOUNT IN ZONE: </span>
-                    <strong className="text-ink">{activeZone.current.toLocaleString()}</strong>
-                    <span className="text-slate-400"> / {activeZone.capacity.toLocaleString()}</span>
+                  <div className="flex items-center gap-3 text-cyan-400 font-bold">
+                    <span>{timeStr}</span>
+                    <span className="text-slate-400 font-normal text-[11px]">LATENCY: 12.4ms</span>
                   </div>
                 </div>
 
-                {/* Video Controls / Layers */}
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowBoxes((prev) => !prev)}
-                    className={`flex items-center gap-1 rounded px-2.5 py-1 text-[11px] transition border ${
-                      showBoxes ? 'border-emerald-500/50 bg-emerald-500/20 text-emerald-300' : 'border-slate-700 bg-slate-800 text-slate-400'
-                    }`}
-                  >
-                    <Eye className="h-3 w-3" />
-                    Bounding Boxes
-                  </button>
+                {/* Canvas Video Stream */}
+                <canvas
+                  ref={canvasRef}
+                  width={960}
+                  height={540}
+                  className="h-full w-full object-cover"
+                />
 
-                  <button
-                    type="button"
-                    onClick={() => setShowHeatmap((prev) => !prev)}
-                    className={`flex items-center gap-1 rounded px-2.5 py-1 text-[11px] transition border ${
-                      showHeatmap ? 'border-amber-500/50 bg-amber-500/20 text-amber-300' : 'border-slate-700 bg-slate-800 text-slate-400'
-                    }`}
-                  >
-                    <Flame className="h-3 w-3" />
-                    AI Heatmap
-                  </button>
+                {/* CCTV HUD Bottom Bar */}
+                <div className="absolute bottom-0 inset-x-0 z-20 flex flex-wrap items-center justify-between gap-2 p-3 bg-gradient-to-t from-black/95 via-black/60 to-transparent font-mono text-xs">
+                  {/* Play / Pause / Reset controls */}
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setIsPlaying((p) => !p)}
+                      className="flex items-center gap-1 rounded bg-slate-800/90 hover:bg-slate-700 px-2.5 py-1 text-slate-200 border border-slate-700"
+                    >
+                      {isPlaying ? <Pause className="h-3 w-3 text-amber-400" /> : <Play className="h-3 w-3 text-emerald-400" />}
+                      <span>{isPlaying ? 'Pause AI' : 'Resume AI'}</span>
+                    </button>
 
-                  <button
-                    type="button"
-                    onClick={() => setThermalMode((prev) => !prev)}
-                    className={`flex items-center gap-1 rounded px-2.5 py-1 text-[11px] transition border ${
-                      thermalMode ? 'border-purple-500/50 bg-purple-500/20 text-purple-300' : 'border-slate-700 bg-slate-800 text-slate-400'
-                    }`}
-                  >
-                    <Layers className="h-3 w-3" />
-                    FLIR Thermal
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => setTripwireCount(0)}
+                      className="flex items-center gap-1 rounded bg-slate-800/90 hover:bg-slate-700 px-2 py-1 text-slate-300 border border-slate-700 text-[11px]"
+                      title="Reset Tripwire Counter"
+                    >
+                      <RotateCcw className="h-3 w-3 text-slate-400" />
+                      <span>Reset Count</span>
+                    </button>
+                  </div>
+
+                  {/* AI Feature Toggles */}
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setShowBoxes((prev) => !prev)}
+                      className={`flex items-center gap-1 rounded px-2.5 py-1 text-[11px] transition border ${
+                        showBoxes ? 'border-cyan-500/50 bg-cyan-500/20 text-cyan-300' : 'border-slate-700 bg-slate-800 text-slate-400'
+                      }`}
+                    >
+                      <Eye className="h-3 w-3" />
+                      Boxes & Vectors
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setShowHeatmap((prev) => !prev)}
+                      className={`flex items-center gap-1 rounded px-2.5 py-1 text-[11px] transition border ${
+                        showHeatmap ? 'border-amber-500/50 bg-amber-500/20 text-amber-300' : 'border-slate-700 bg-slate-800 text-slate-400'
+                      }`}
+                    >
+                      <Flame className="h-3 w-3" />
+                      Heatmap
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setShowTripwire((prev) => !prev)}
+                      className={`flex items-center gap-1 rounded px-2.5 py-1 text-[11px] transition border ${
+                        showTripwire ? 'border-sky-500/50 bg-sky-500/20 text-sky-300' : 'border-slate-700 bg-slate-800 text-slate-400'
+                      }`}
+                    >
+                      <Compass className="h-3 w-3" />
+                      Tripwire
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setThermalMode((prev) => !prev)}
+                      className={`flex items-center gap-1 rounded px-2.5 py-1 text-[11px] transition border ${
+                        thermalMode ? 'border-purple-500/50 bg-purple-500/20 text-purple-300' : 'border-slate-700 bg-slate-800 text-slate-400'
+                      }`}
+                    >
+                      <Layers className="h-3 w-3" />
+                      Thermal FLIR
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
+
+              {/* RIGHT: DEDICATED AUTOMATED CCTV INTELLIGENCE SECTION */}
+              <div className="w-80 lg:w-96 flex flex-col rounded-2xl border border-slate-800 bg-slate-900/90 p-3.5 overflow-y-auto space-y-3 shadow-xl">
+                {/* Section Header */}
+                <div className="border-b border-slate-800 pb-2 flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <Cpu className="h-4 w-4 text-cyan-400" />
+                    <h3 className="font-display text-xs font-bold uppercase tracking-wider text-slate-200">
+                      Automated CCTV Intelligence
+                    </h3>
+                  </div>
+                  <span className="rounded bg-emerald-500/10 border border-emerald-500/30 px-1.5 py-0.5 text-[9px] font-mono text-emerald-400 flex items-center gap-1">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping" />
+                    INFERENCE ACTIVE
+                  </span>
+                </div>
+
+                {/* Primary Metric Grid */}
+                <div className="grid grid-cols-2 gap-2 font-mono text-xs">
+                  <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-2.5">
+                    <div className="flex items-center justify-between text-[10px] text-slate-400 mb-1">
+                      <span>PEOPLE IN FOV</span>
+                      <Users className="h-3 w-3 text-cyan-400" />
+                    </div>
+                    <div className="text-xl font-bold text-white">{peopleCount}</div>
+                    <div className="text-[10px] text-emerald-400 mt-0.5">Tracking Accuracy: 98.6%</div>
+                  </div>
+
+                  <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-2.5">
+                    <div className="flex items-center justify-between text-[10px] text-slate-400 mb-1">
+                      <span>FLOW VELOCITY</span>
+                      <Activity className="h-3 w-3 text-amber-400" />
+                    </div>
+                    <div className="text-xl font-bold text-white">{flowRate} <span className="text-xs text-slate-400">p/s</span></div>
+                    <div className="text-[10px] text-slate-400 mt-0.5">Speed: ~1.4 m/s</div>
+                  </div>
+
+                  <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-2.5">
+                    <div className="flex items-center justify-between text-[10px] text-slate-400 mb-1">
+                      <span>FRUIN DENSITY</span>
+                      <Flame className="h-3 w-3 text-rose-400" />
+                    </div>
+                    <div className={`text-xl font-bold ${densityFruin > 3.0 ? 'text-rose-400' : 'text-amber-400'}`}>
+                      {densityFruin} <span className="text-xs text-slate-400">p/m²</span>
+                    </div>
+                    <div className="text-[10px] text-slate-400 mt-0.5">
+                      {densityFruin > 3.0 ? 'LOS E: Crush Risk' : 'LOS C: Normal Ingress'}
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-2.5">
+                    <div className="flex items-center justify-between text-[10px] text-slate-400 mb-1">
+                      <span>ACCUMULATOR</span>
+                      <Compass className="h-3 w-3 text-sky-400" />
+                    </div>
+                    <div className="text-xl font-bold text-white">{tripwireCount}</div>
+                    <div className="text-[10px] text-cyan-400 mt-0.5">Tripwire Net Count</div>
+                  </div>
+                </div>
+
+                {/* Density Fruin Scale Bar */}
+                <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-2.5 font-mono text-xs">
+                  <div className="flex items-center justify-between text-[10px] text-slate-400 mb-1.5">
+                    <span>CROWD COMPRESSION GAUGE</span>
+                    <span className={densityFruin > 3.0 ? 'text-rose-400 font-bold' : 'text-emerald-400'}>
+                      {densityFruin > 3.0 ? 'SURGE ALERT' : 'OPTIMAL'}
+                    </span>
+                  </div>
+                  <div className="h-2 w-full rounded-full bg-slate-800 overflow-hidden flex">
+                    <div className="h-full bg-emerald-500" style={{ width: '40%' }} />
+                    <div className="h-full bg-amber-500" style={{ width: '30%' }} />
+                    <div className="h-full bg-rose-500" style={{ width: '30%' }} />
+                  </div>
+                  <div className="flex justify-between text-[9px] text-slate-500 mt-1">
+                    <span>LOS A (0.5)</span>
+                    <span>LOS C (1.8)</span>
+                    <span>LOS F (&gt;3.5)</span>
+                  </div>
+                </div>
+
+                {/* Turnstiles Throughput Matrix */}
+                <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-2.5 font-mono text-xs">
+                  <div className="text-[10px] font-bold text-slate-400 mb-2 uppercase flex items-center justify-between">
+                    <span>Turnstile Flow Matrix</span>
+                    <span className="text-slate-500">Rate / min</span>
+                  </div>
+                  <div className="space-y-1.5">
+                    {[
+                      { name: 'Lane 01 (Regular)', rate: '22 p/min', status: 'optimal' },
+                      { name: 'Lane 02 (Regular)', rate: '26 p/min', status: 'moderate' },
+                      { name: 'Lane 03 (Main Chokepoint)', rate: isCritical ? '48 p/min' : '32 p/min', status: isCritical ? 'congested' : 'moderate' },
+                      { name: 'Lane 04 (Fast-Track)', rate: '12 p/min', status: 'optimal' },
+                    ].map((t, idx) => (
+                      <div key={idx} className="flex items-center justify-between rounded bg-slate-900 px-2 py-1 text-[11px]">
+                        <span className="text-slate-300">{t.name}</span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-bold text-white">{t.rate}</span>
+                          <span
+                            className={`h-1.5 w-1.5 rounded-full ${
+                              t.status === 'congested' ? 'bg-rose-500 animate-ping' : t.status === 'moderate' ? 'bg-amber-400' : 'bg-emerald-400'
+                            }`}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Automated AI Observations & Prescriptions */}
+                <div className="rounded-xl border border-cyan-500/30 bg-cyan-950/20 p-2.5 text-xs font-mono">
+                  <div className="flex items-center gap-1.5 text-cyan-300 font-bold mb-1.5">
+                    <Sparkles className="h-3.5 w-3.5 text-cyan-400" />
+                    <span>AI Automated Observations</span>
+                  </div>
+                  <div className="space-y-1.5 text-[11px] text-slate-300">
+                    <p className="leading-snug">
+                      • {isCritical
+                        ? '🚨 Rapid influx detected at Gate B Turnstile 3. Ingress velocity exceeds safe baseline by +43%.'
+                        : '⚡ Optical flow vectors indicate steady forward circulation across entrance corridor.'}
+                    </p>
+                    <p className="leading-snug text-amber-300">
+                      • Spatial density at {densityFruin} p/m² — approaching Fruin Level E threshold near turnstile choke points.
+                    </p>
+                    <p className="leading-snug text-cyan-300">
+                      • Prescriptive Action: Recommend dynamic signage redirect to Lane 04 and auxiliary Gate C.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Real-time Detection Event Stream Log */}
+                <div className="rounded-xl border border-slate-800 bg-slate-950/90 p-2.5 font-mono text-[10px] flex-1 flex flex-col">
+                  <div className="flex items-center justify-between text-slate-400 mb-1.5 pb-1 border-b border-slate-800">
+                    <span>LIVE DETECTION STREAM</span>
+                    <span className="text-emerald-400">YOLOv11 ON</span>
+                  </div>
+                  <div className="space-y-1 overflow-y-auto max-h-36 scrollbar-none pr-1">
+                    {detectionLogs.map((log) => (
+                      <div key={log.id} className="flex items-center justify-between text-slate-400">
+                        <span className="text-slate-500">{log.time.slice(0, 8)}</span>
+                        <span className={log.risk === 'critical' ? 'text-rose-400 font-bold' : 'text-slate-300'}>
+                          #{log.pedId} {log.action}
+                        </span>
+                        <span className="text-cyan-400">{log.velocity}</span>
+                      </div>
+                    ))}
+                    {detectionLogs.length === 0 && (
+                      <div className="text-slate-500 italic py-2 text-center">Processing video stream detections...</div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </>
           ) : (
             /* 6-Camera Multi-View Grid */
             <div className="grid flex-1 grid-cols-2 gap-3 md:grid-cols-3 overflow-y-auto">
               {CAMERAS.map((cam) => {
                 const z = zones[cam.zoneId];
-                const p = predictions[cam.zoneId];
+                const p = predictions[cam.zoneId] ?? { riskLevel: 'normal' };
                 const pct = z ? (z.current / z.capacity) * 100 : 0;
                 const isCrit = p.riskLevel === 'critical';
 
@@ -640,12 +1031,12 @@ export function CCTVModal({ isOpen, onClose, initialZoneId = 'gate-b' }: CCTVMod
                       setSelectedCam(cam);
                       setViewMode('single');
                     }}
-                    className={`group relative flex flex-col rounded-xl border-2 bg-black p-2.5 cursor-pointer transition hover:border-info ${
+                    className={`group relative flex flex-col rounded-xl border-2 bg-black p-2.5 cursor-pointer transition hover:border-cyan-400 ${
                       isCrit ? 'border-rose-500/80 shadow-critical-glow' : 'border-slate-800'
                     }`}
                   >
                     <div className="flex items-center justify-between font-mono text-[10px] text-slate-400 mb-1.5">
-                      <span className="font-bold text-ink flex items-center gap-1">
+                      <span className="font-bold text-white flex items-center gap-1">
                         <span className={`h-1.5 w-1.5 rounded-full ${isCrit ? 'bg-rose-500 animate-ping' : 'bg-emerald-400'}`} />
                         {cam.id}
                       </span>
@@ -653,7 +1044,7 @@ export function CCTVModal({ isOpen, onClose, initialZoneId = 'gate-b' }: CCTVMod
                     </div>
 
                     <div className="relative flex-1 rounded bg-slate-950 min-h-[110px] flex flex-col items-center justify-center overflow-hidden border border-slate-900">
-                      <div className={`absolute inset-0 opacity-20 ${isCrit ? 'bg-rose-500' : 'bg-sky-500'}`} />
+                      <div className={`absolute inset-0 opacity-20 ${isCrit ? 'bg-rose-500' : 'bg-cyan-500'}`} />
                       <Activity className={`h-6 w-6 mb-1 ${isCrit ? 'text-rose-400 animate-pulse' : 'text-slate-500'}`} />
                       <span className="font-mono text-xs font-bold text-slate-200">{cam.name}</span>
                       <span className="font-mono text-[11px] text-slate-400">
@@ -665,7 +1056,9 @@ export function CCTVModal({ isOpen, onClose, initialZoneId = 'gate-b' }: CCTVMod
                       <span className={isCrit ? 'text-rose-400 font-bold' : 'text-slate-500'}>
                         {isCrit ? 'CRITICAL INFLUX' : 'MONITORING'}
                       </span>
-                      <span className="text-info group-hover:underline">Click to Expand ↗</span>
+                      <span className="text-cyan-400 group-hover:underline flex items-center gap-0.5">
+                        Inspect Feed <ArrowUpRight className="h-3 w-3" />
+                      </span>
                     </div>
                   </div>
                 );
@@ -675,19 +1068,20 @@ export function CCTVModal({ isOpen, onClose, initialZoneId = 'gate-b' }: CCTVMod
         </div>
 
         {/* Modal Footer */}
-        <div className="flex items-center justify-between border-t border-slate-800 bg-slate-900/60 px-5 py-2.5 font-mono text-xs text-slate-400">
+        <div className="flex items-center justify-between border-t border-slate-800 bg-slate-900/70 px-5 py-2.5 font-mono text-xs text-slate-400">
           <div className="flex items-center gap-3">
             <span className="flex items-center gap-1 text-emerald-400">
               <CheckCircle2 className="h-3.5 w-3.5" />
               Vision Inference Engine Online
             </span>
-            <span>Target Confidence: &gt; 98.4%</span>
+            <span>Target Confidence: &gt; 98.6%</span>
+            <span className="text-cyan-400">Syncing {peopleCount} Detected Pedestrians with Venue Map</span>
           </div>
 
           <button
             type="button"
             onClick={onClose}
-            className="rounded border border-slate-700 bg-slate-800 px-3 py-1 font-semibold text-ink hover:bg-slate-700 transition"
+            className="rounded border border-slate-700 bg-slate-800 px-3.5 py-1 font-semibold text-white hover:bg-slate-700 transition"
           >
             Close Feed
           </button>

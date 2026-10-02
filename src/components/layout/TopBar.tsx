@@ -1,4 +1,4 @@
-import { Play, Pause, RotateCcw, ShieldAlert, Siren, Megaphone, Smartphone } from 'lucide-react';
+import { Play, Pause, RotateCcw, ShieldAlert, Siren, Megaphone, Smartphone, Camera } from 'lucide-react';
 import { useCommandCenter } from '@/state/CommandCenterProvider';
 import { ThemeToggle } from '@/theme/ThemeToggle';
 import type { FeedStatus, SimStatus } from '@/types';
@@ -59,6 +59,7 @@ export function TopBar() {
     setIsPoliceModalOpen,
     setIsBroadcastModalOpen,
     setIsAttendeeModalOpen,
+    openCCTV,
     runSurgeScenario,
     pause,
     resume,
@@ -122,6 +123,20 @@ export function TopBar() {
         >
           <Smartphone className="h-4 w-4 text-emerald-400" />
           <span>📱 ATTENDEE APP</span>
+        </button>
+
+        {/* 0b. Automated CCTV Intelligence & Vision AI */}
+        <button
+          type="button"
+          onClick={() => openCCTV('gate-b')}
+          className="inline-flex items-center gap-1.5 rounded-lg border border-cyan-500/40 bg-cyan-950/40 px-3 py-2 text-xs font-mono font-bold text-cyan-300 hover:bg-cyan-900/60 hover:text-ink transition hover:scale-105 active:scale-95"
+          title="Automated CCTV Intelligence & Vision AI (Live Camera Tracking)"
+        >
+          <Camera className="h-4 w-4 text-cyan-400" />
+          <span>📹 CCTV VISION AI</span>
+          <span className="rounded bg-cyan-900/80 border border-cyan-400/50 px-1.5 py-0.2 text-[9px] text-cyan-200">
+            60 FPS
+          </span>
         </button>
 
         {/* 1. Stadium PA & Digital Screens (Inside stadium speakers & digital signage) */}

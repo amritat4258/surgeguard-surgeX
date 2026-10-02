@@ -1,4 +1,4 @@
-﻿import {
+import {
   createContext,
   useCallback,
   useContext,
@@ -22,6 +22,8 @@ import type {
   TelemetryLogItem,
   SOSBeacon,
   SOSType,
+  CCTVVisionData,
+  VisionTrackedPerson,
 } from '@/types';
 import { predictZone } from '@/engine/prediction';
 import {
@@ -304,6 +306,13 @@ interface CommandCenterContextValue {
   setIsBroadcastModalOpen: (open: boolean) => void;
   isAttendeeModalOpen: boolean;
   setIsAttendeeModalOpen: (open: boolean) => void;
+  // CCTV Intelligence & Map Tracking
+  cctvVisionData: CCTVVisionData;
+  updateCCTVVisionData: (data: Partial<CCTVVisionData>) => void;
+  isCCTVModalOpen: boolean;
+  setIsCCTVModalOpen: (open: boolean) => void;
+  openCCTV: (zoneId?: ZoneId) => void;
+  cctvActiveZoneId: ZoneId;
   triggerSOS: (type: SOSType, zoneId?: ZoneId) => void;
   assignResponder: () => void;
   dispatchParamedics: () => void;
@@ -351,6 +360,41 @@ export function CommandCenterProvider({
   const [isPoliceModalOpen, setIsPoliceModalOpen] = useState(false);
   const [isBroadcastModalOpen, setIsBroadcastModalOpen] = useState(false);
   const [isAttendeeModalOpen, setIsAttendeeModalOpen] = useState(false);
+
+  // CCTV Intelligence & Map Tracking State
+  const [isCCTVModalOpen, setIsCCTVModalOpen] = useState(false);
+  const [cctvActiveZoneId, setCctvActiveZoneId] = useState<ZoneId>('gate-b');
+  const [cctvVisionData, setCctvVisionData] = useState<CCTVVisionData>({
+    isActive: true,
+    zoneId: 'gate-b',
+    cameraName: 'CAM-GB-02 (Gate B Main Influx)',
+    sourceType: 'demo_video',
+    people: [],
+    count: 42,
+    densityPerM2: 2.8,
+    inflowRatePerSec: 2.4,
+    surgeProbability: 78,
+    turnstileQueues: [
+      { id: 'T-1', name: 'Turnstile A1', count: 14, status: 'optimal' },
+      { id: 'T-2', name: 'Turnstile A2', count: 18, status: 'moderate' },
+      { id: 'T-3', name: 'Turnstile B1 (Main)', count: 32, status: 'congested' },
+      { id: 'T-4', name: 'Turnstile B2 (FastTrack)', count: 9, status: 'optimal' },
+    ],
+    aiObservations: [
+      'Vision AI: Rapid ingress detected (+38%) at Turnstile B1.',
+      'Density index in Quad-2 approaching Fruin LOS E threshold (3.1 p/m²).',
+      'Prescriptive Action: Flip signage to divert excess arrivals to Gate C.',
+    ],
+  });
+
+  const updateCCTVVisionData = useCallback((data: Partial<CCTVVisionData>) => {
+    setCctvVisionData((prev) => ({ ...prev, ...data }));
+  }, []);
+
+  const openCCTV = useCallback((zoneId: ZoneId = 'gate-b') => {
+    setCctvActiveZoneId(zoneId);
+    setIsCCTVModalOpen(true);
+  }, []);
 
   const [mySOS, setMySOS] = useState<MySOS | null>(null);
   const [inbox, setInbox] = useState<InboxItem[]>([]);
@@ -782,6 +826,12 @@ export function CommandCenterProvider({
     setIsBroadcastModalOpen,
     isAttendeeModalOpen,
     setIsAttendeeModalOpen,
+    cctvVisionData,
+    updateCCTVVisionData,
+    isCCTVModalOpen,
+    setIsCCTVModalOpen,
+    openCCTV,
+    cctvActiveZoneId,
     triggerSOS,
     assignResponder,
     dispatchParamedics,

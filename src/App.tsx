@@ -1,4 +1,4 @@
-﻿import {
+import {
   CommandCenterProvider,
   useCommandCenter,
 } from '@/state/CommandCenterProvider';
@@ -18,6 +18,7 @@ import { PoliceDispatchModal } from '@/components/government/PoliceDispatchModal
 import { PublicBroadcastModal } from '@/components/broadcast/PublicBroadcastModal';
 import AttendeeAppModal from '@/components/attendee/AttendeeAppModal';
 import { AttendeePushPanel } from '@/components/attendee/AttendeePushPanel';
+import { CCTVModal } from '@/components/cctv/CCTVModal';
 
 function Dashboard() {
   const {
@@ -34,6 +35,9 @@ function Dashboard() {
     setIsBroadcastModalOpen,
     isAttendeeModalOpen,
     setIsAttendeeModalOpen,
+    isCCTVModalOpen,
+    setIsCCTVModalOpen,
+    cctvActiveZoneId,
   } = useCommandCenter();
 
   return (
@@ -118,6 +122,12 @@ function Dashboard() {
         onClose={() => setIsAttendeeModalOpen(false)}
       />
 
+      {/* Automated CCTV Intelligence & Vision AI Modal */}
+      <CCTVModal
+        isOpen={isCCTVModalOpen}
+        onClose={() => setIsCCTVModalOpen(false)}
+        initialZoneId={cctvActiveZoneId}
+      />
     </div>
   );
 }

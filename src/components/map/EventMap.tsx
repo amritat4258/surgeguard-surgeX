@@ -12,6 +12,7 @@ import {
   Users,
   Radio,
   Sparkles,
+  Camera,
 } from 'lucide-react';
 import { DroneThermalPatrol } from './DroneThermalPatrol';
 import {
@@ -86,7 +87,17 @@ const legend: { label: string; cls: string }[] = [
 ];
 
 export function EventMap() {
-  const { zones, predictions, execution, mode, activeSOS, setIsSOSModalOpen, setIsBroadcastModalOpen } = useCommandCenter();
+  const {
+    zones,
+    predictions,
+    execution,
+    mode,
+    activeSOS,
+    setIsSOSModalOpen,
+    setIsBroadcastModalOpen,
+    openCCTV,
+    cctvVisionData,
+  } = useCommandCenter();
   const [isDroneView, setIsDroneView] = useState(false);
   const [facilityFilter, setFacilityFilter] = useState<FacilityKind>('all');
   const [selectedFacility, setSelectedFacility] = useState<VenueFacility | null>(null);
@@ -141,6 +152,17 @@ export function EventMap() {
 
         {/* View Switcher & Legend */}
         <div className="flex items-center gap-2 sm:gap-3">
+          <button
+            type="button"
+            onClick={() => openCCTV(cctvVisionData.zoneId)}
+            className="flex items-center gap-1.5 rounded-lg border border-cyan-500/50 bg-cyan-950/80 hover:bg-cyan-900 px-2.5 py-1 font-mono text-[11px] font-bold text-cyan-300 transition shadow-sm"
+            title="Inspect live CCTV Video Tracking feed"
+          >
+            <Camera className="h-3.5 w-3.5 text-cyan-400" />
+            <span>CCTV AI ({cctvVisionData.people.length > 0 ? cctvVisionData.people.length : cctvVisionData.count} TRACKED)</span>
+            <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-ping" />
+          </button>
+
           <button
             type="button"
             onClick={() => setIsDroneView((v) => !v)}
@@ -558,6 +580,93 @@ export function EventMap() {
               </g>
             );
           })}
+
+          {/* CCTV Vision AI Camera Stanchion, Scanning Cone & Live Tracked People */}
+          <g id="cctv-vision-ai-overlay">
+            {/* Camera FOV Scanning Radar Cone at Gate B (Node is x: 660, y: 100, w: 130, h: 60) */}
+            <defs>
+              <linearGradient id="cctvConeGrad" x1="100%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.4" />
+                <stop offset="60%" stopColor="#0ea5e9" stopOpacity="0.15" />
+                <stop offset="100%" stopColor="#0284c7" stopOpacity="0.02" />
+              </linearGradient>
+            </defs>
+
+            {/* Radar Vision Cone */}
+            <path
+              d="M 735 70 L 585 55 L 615 155 Z"
+              fill="url(#cctvConeGrad)"
+              stroke="#06b6d4"
+              strokeWidth="1.2"
+              strokeDasharray="4 3"
+              opacity="0.85"
+              className="cursor-pointer hover:opacity-100 transition"
+              onClick={() => openCCTV('gate-b')}
+            >
+              <title>Click to inspect CAM-GB-02 Live CCTV AI Feed</title>
+            </path>
+
+            {/* Camera Stanchion Icon */}
+            <g
+              transform="translate(735, 70)"
+              className="cursor-pointer group"
+              onClick={() => openCCTV('gate-b')}
+            >
+              <circle r="12" fill="#0f172a" stroke="#06b6d4" strokeWidth="2" />
+              <circle r="4" fill="#06b6d4" className="animate-ping" opacity="0.75" />
+              <path
+                d="M -5 -3 L 1 -3 L 5 -6 L 5 6 L 1 3 L -5 3 Z"
+                fill="#38bdf8"
+              />
+              {/* Camera Badge */}
+              <rect x="-35" y="-22" width="70" height="13" rx="3" fill="#020617" stroke="#06b6d4" strokeWidth="1" />
+              <text x="0" y="-13" textAnchor="middle" fill="#38bdf8" fontFamily="monospace" fontSize="8" fontWeight="bold">
+                CAM-GB-02 ● AI
+              </text>
+            </g>
+
+            {/* Live Tracked Pedestrians from CCTV Video */}
+            {(cctvVisionData.people.length > 0
+              ? cctvVisionData.people
+              : Array.from({ length: 28 }, (_, i) => ({
+                  id: 100 + i,
+                  x: 10 + ((i * 13) % 80),
+                  y: 15 + ((i * 29) % 70),
+                  vx: i % 2 === 0 ? 0.8 : -0.4,
+                  vy: 0.9,
+                  speed: 1.2,
+                  risk: (i % 7 === 0 ? 'critical' : i % 3 === 0 ? 'warning' : 'normal') as RiskLevel,
+                }))
+            ).map((p) => {
+              // Map (0..100) within Gate B bounds (595..725, 70..130)
+              const px = 600 + (p.x / 100) * 120;
+              const py = 75 + (p.y / 100) * 50;
+              const color =
+                p.risk === 'critical' ? '#ef4444' : p.risk === 'warning' ? '#f59e0b' : '#10b981';
+
+              return (
+                <g key={`cctv-ped-${p.id}`} className="transition-all duration-300">
+                  {/* Subtle velocity vector trail */}
+                  <line
+                    x1={px}
+                    y1={py}
+                    x2={px + p.vx * 3.5}
+                    y2={py + p.vy * 3.5}
+                    stroke={color}
+                    strokeWidth="1.2"
+                    opacity="0.8"
+                  />
+                  {/* Pedestrian Head Dot */}
+                  <circle cx={px} cy={py} r="2.8" fill={color} stroke="#020617" strokeWidth="0.8">
+                    <title>{`Track #${p.id} | Velocity: ${(p.speed * 1.1).toFixed(1)} m/s | Risk: ${p.risk}`}</title>
+                  </circle>
+                  {p.risk === 'critical' && (
+                    <circle cx={px} cy={py} r="5.5" fill="none" stroke="#ef4444" strokeWidth="1" className="animate-ping" />
+                  )}
+                </g>
+              );
+            })}
+          </g>
 
           {/* Interactive Stalls & Public Safety Amenities with Live Rush Badge */}
           {activeFacilities.map((f) => {

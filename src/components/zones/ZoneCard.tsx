@@ -1,8 +1,7 @@
-import { useState } from 'react';
 import { Clock, UserCheck, Camera } from 'lucide-react';
 import type { Zone, ZonePrediction } from '@/types';
 import { riskStyles } from '@/components/zones/riskStyles';
-import { CCTVModal } from '@/components/cctv/CCTVModal';
+import { useCommandCenter } from '@/state/CommandCenterProvider';
 
 interface ZoneCardProps {
   zone: Zone;
@@ -10,38 +9,37 @@ interface ZoneCardProps {
 }
 
 export function ZoneCard({ zone, prediction }: ZoneCardProps) {
-  const [isCCTVOpen, setIsCCTVOpen] = useState(false);
+  const { openCCTV } = useCommandCenter();
   const style = riskStyles[prediction.riskLevel];
   const pct = (zone.current / zone.capacity) * 100;
   const barWidth = Math.min(100, Math.max(0, pct));
   const eta = prediction.timeToCapacityMin;
 
   return (
-    <>
-      <div
-        className={`rounded-xl border bg-surface-panel p-4 transition-colors ${style.border} ${style.glow}`}
-      >
-        {/* Header: name + CCTV button + risk badge */}
-        <div className="flex items-start justify-between gap-2">
-          <div>
-            <h3 className="font-display text-base font-semibold text-slate-100">
-              {zone.name}
-            </h3>
-            <p className="text-xs uppercase tracking-wide text-slate-500">
-              {zone.kind}
-            </p>
-          </div>
+    <div
+      className={`rounded-xl border bg-surface-panel p-4 transition-colors ${style.border} ${style.glow}`}
+    >
+      {/* Header: name + CCTV button + risk badge */}
+      <div className="flex items-start justify-between gap-2">
+        <div>
+          <h3 className="font-display text-base font-semibold text-slate-100">
+            {zone.name}
+          </h3>
+          <p className="text-xs uppercase tracking-wide text-slate-500">
+            {zone.kind}
+          </p>
+        </div>
 
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setIsCCTVOpen(true)}
-              title={`View real-time optical/LIDAR CCTV feed for ${zone.name}`}
-              className="flex items-center gap-1 rounded-lg border border-slate-700 bg-slate-800/90 px-2 py-0.5 text-[11px] font-mono text-slate-300 hover:border-info hover:text-info transition shadow-sm"
-            >
-              <Camera className="h-3 w-3 text-info" />
-              <span>CCTV</span>
-            </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => openCCTV(zone.id)}
+            title={`View real-time optical/LIDAR CCTV feed for ${zone.name}`}
+            className="flex items-center gap-1 rounded-lg border border-slate-700 bg-slate-800/90 px-2 py-0.5 text-[11px] font-mono text-slate-300 hover:border-info hover:text-info transition shadow-sm"
+          >
+            <Camera className="h-3 w-3 text-info" />
+            <span>CCTV</span>
+          </button>
 
             <span
               className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold tracking-wide ${style.badge}`}
@@ -101,12 +99,5 @@ export function ZoneCard({ zone, prediction }: ZoneCardProps) {
           </p>
         </div>
       </div>
-
-      <CCTVModal
-        isOpen={isCCTVOpen}
-        onClose={() => setIsCCTVOpen(false)}
-        initialZoneId={zone.id}
-      />
-    </>
   );
 }

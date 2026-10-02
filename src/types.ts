@@ -183,4 +183,31 @@ export interface SOSBeacon {
   calmMessageSent?: boolean;
 }
 
+export interface VisionTrackedPerson {
+  id: number;
+  x: number; // 0 to 100 relative to zone bounding box
+  y: number; // 0 to 100 relative to zone bounding box
+  vx: number;
+  vy: number;
+  speed: number;
+  risk: RiskLevel;
+  confidence: number;
+  boxWidth: number;
+  boxHeight: number;
+}
+
+export interface CCTVVisionData {
+  isActive: boolean;
+  zoneId: ZoneId;
+  cameraName: string;
+  sourceType: 'demo_video' | 'custom_video' | 'webcam' | 'synthetic';
+  people: VisionTrackedPerson[];
+  count: number;
+  densityPerM2: number;
+  inflowRatePerSec: number;
+  surgeProbability: number;
+  turnstileQueues: { id: string; name: string; count: number; status: 'optimal' | 'moderate' | 'congested' }[];
+  aiObservations: string[];
+}
+
 
