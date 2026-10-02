@@ -52,6 +52,21 @@ const CAMERAS: CameraConfig[] = [
   { id: 'CAM-PK-06', zoneId: 'parking', name: 'Parking Transit Hub', type: 'Perimeter Optical', resolution: '1080p', fps: 30 },
 ];
 
+export interface CameraFeedItem {
+  url: string;
+  name: string;
+  isCustom?: boolean;
+}
+
+const DEFAULT_CAMERA_FEEDS: Record<string, CameraFeedItem> = {
+  'CAM-GB-02': { url: '/videos/cctv-demo.mp4', name: 'Crowd Ingress (0:10-0:17)' },
+  'CAM-GA-01': { url: '', name: 'Turnstile A Matrix' },
+  'CAM-GC-03': { url: '', name: 'Gate C Fast-Track' },
+  'CAM-AR-04': { url: '', name: 'Arena Concourse West' },
+  'CAM-FC-05': { url: '', name: 'Food Court North' },
+  'CAM-PK-06': { url: '', name: 'Parking Transit Hub' },
+};
+
 type VideoSourceType = 'demo_gate' | 'demo_concourse' | 'custom' | 'webcam';
 
 interface InternalPedestrian {
@@ -99,6 +114,10 @@ export function CCTVModal({ isOpen, onClose, initialZoneId = 'gate-b' }: CCTVMod
   const [webcamError, setWebcamError] = useState<string | null>(null);
   const [timeStr, setTimeStr] = useState('');
 
+  // 6-Camera Independent Video Feeds Configuration
+  const [cameraFeeds, setCameraFeeds] = useState<Record<string, CameraFeedItem>>(DEFAULT_CAMERA_FEEDS);
+  const [isFeedManagerOpen, setIsFeedManagerOpen] = useState(false);
+
   // Live AI Telemetry States
   const [peopleCount, setPeopleCount] = useState(44);
   const [flowRate, setFlowRate] = useState(2.6);
@@ -112,6 +131,45 @@ export function CCTVModal({ isOpen, onClose, initialZoneId = 'gate-b' }: CCTVMod
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const pedestriansRef = useRef<InternalPedestrian[]>([]);
   const frameCountRef = useRef(0);
+
+  // Handlers for assigning videos to any of the 6 cameras
+  const handleAssignVideoToCam = (camId: string, file: File) => {
+    const url = URL.createObjectURL(file);
+    setCameraFeeds((prev) => ({
+      ...prev,
+      [camId]: { url, name: file.name, isCustom: true },
+    }));
+    if (selectedCam.id === camId && videoRef.current) {
+      videoRef.current.srcObject = null;
+      videoRef.current.src = url;
+      videoRef.current.play().catch(() => {});
+      setIsPlaying(true);
+    }
+  };
+
+  const handleSetVideoUrlToCam = (camId: string, url: string, name?: string) => {
+    if (!url.trim()) return;
+    setCameraFeeds((prev) => ({
+      ...prev,
+      [camId]: { url: url.trim(), name: name || 'Custom Stream', isCustom: true },
+    }));
+    if (selectedCam.id === camId && videoRef.current) {
+      videoRef.current.srcObject = null;
+      videoRef.current.src = url.trim();
+      videoRef.current.play().catch(() => {});
+      setIsPlaying(true);
+    }
+  };
+
+  const handleResetVideoCam = (camId: string) => {
+    setCameraFeeds((prev) => ({
+      ...prev,
+      [camId]: {
+        url: camId === 'CAM-GB-02' ? '/videos/cctv-demo.mp4' : '',
+        name: camId === 'CAM-GB-02' ? 'Crowd Ingress (0:10-0:17)' : (CAMERAS.find((c) => c.id === camId)?.name ?? 'Camera'),
+      },
+    }));
+  };
 
   // Sync selected camera if initialZoneId changes when modal opens
   useEffect(() => {
@@ -155,23 +213,36 @@ export function CCTVModal({ isOpen, onClose, initialZoneId = 'gate-b' }: CCTVMod
     };
   }, [isOpen, sourceType]);
 
-  // Handle Demo Video Loading & Loop Playback (0:10 to 0:17 Crowd Surveillance Clip)
+  // Handle Camera Video Loading & Loop Playback
   useEffect(() => {
     if (!isOpen) return;
+    if (sourceType === 'webcam') return;
 
-    if (sourceType === 'demo_gate') {
-      if (videoRef.current) {
-        videoRef.current.srcObject = null;
-        videoRef.current.src = '/videos/cctv-demo.mp4';
-        videoRef.current.loop = true;
-        videoRef.current.muted = true;
-        videoRef.current.play().catch((err) => {
-          console.warn('Demo video playback notice:', err);
-        });
-        setIsPlaying(true);
-      }
+    if (sourceType === 'custom' && customVideoUrl && videoRef.current) {
+      videoRef.current.srcObject = null;
+      videoRef.current.src = customVideoUrl;
+      videoRef.current.play().catch(() => {});
+      setIsPlaying(true);
+      return;
     }
-  }, [isOpen, sourceType]);
+
+    const currentFeed = cameraFeeds[selectedCam.id];
+    if (currentFeed && currentFeed.url && videoRef.current) {
+      videoRef.current.srcObject = null;
+      videoRef.current.src = currentFeed.url;
+      videoRef.current.loop = true;
+      videoRef.current.muted = true;
+      videoRef.current.play().catch(() => {});
+      setIsPlaying(true);
+    } else if (sourceType === 'demo_gate' && videoRef.current) {
+      videoRef.current.srcObject = null;
+      videoRef.current.src = '/videos/cctv-demo.mp4';
+      videoRef.current.loop = true;
+      videoRef.current.muted = true;
+      videoRef.current.play().catch(() => {});
+      setIsPlaying(true);
+    }
+  }, [isOpen, selectedCam.id, cameraFeeds, sourceType, customVideoUrl]);
 
   // Sync Video element Play/Pause with isPlaying state
   useEffect(() => {
@@ -217,27 +288,34 @@ export function CCTVModal({ isOpen, onClose, initialZoneId = 'gate-b' }: CCTVMod
     }
   };
 
-  // Initialize simulated pedestrians pool based on zone occupancy
+  // Initialize simulated pedestrians pool strictly on the ground floor plane
   const initPedestrians = useCallback((count: number, width: number, height: number) => {
     const pList: InternalPedestrian[] = [];
     const colors = ['#38bdf8', '#818cf8', '#a78bfa', '#f472b6', '#34d399', '#fbbf24', '#f87171'];
 
+    // Ground plane coordinates: only spawn people on the ground floor (46% to 88% height)
+    const groundMinY = height * 0.46;
+    const groundMaxY = height * 0.88;
+
     for (let i = 0; i < count; i++) {
       const lane = i % 4;
-      const startX = 60 + Math.random() * (width - 120);
-      const startY = height * 0.15 + Math.random() * (height * 0.75);
-      const speed = 0.8 + Math.random() * 1.6;
+      const startX = 70 + Math.random() * (width - 140);
+      const startY = groundMinY + Math.random() * (groundMaxY - groundMinY);
+      const speed = 0.8 + Math.random() * 1.5;
+
+      // Ground plane depth factor: further back = smaller, closer forward = larger
+      const depth = Math.max(0.45, (startY - groundMinY) / (groundMaxY - groundMinY));
 
       pList.push({
-        id: 100 + i,
+        id: 101 + i,
         x: startX,
         y: startY,
-        vx: (Math.random() - 0.45) * 1.2,
-        vy: speed * (0.8 + Math.random() * 0.4),
-        targetX: startX + (Math.random() - 0.5) * 80,
-        targetY: startY + 60,
-        boxW: 24 + (startY / height) * 18,
-        boxH: 48 + (startY / height) * 36,
+        vx: (Math.random() - 0.48) * 1.1,
+        vy: speed * (0.6 + Math.random() * 0.5),
+        targetX: startX + (Math.random() - 0.5) * 60,
+        targetY: startY + 40,
+        boxW: 22 * depth * 1.4,
+        boxH: 48 * depth * 1.25,
         conf: 0.94 + Math.random() * 0.055,
         risk: 'normal',
         lane,
@@ -271,45 +349,50 @@ export function CCTVModal({ isOpen, onClose, initialZoneId = 'gate-b' }: CCTVMod
       initPedestrians(targetHeadcount, canvas.width, canvas.height);
     }
 
-    const tripwireY = canvas.height * 0.58;
+    const tripwireY = canvas.height * 0.62;
 
     const render = () => {
       frameCountRef.current++;
+      const currentFeed = cameraFeeds[selectedCam.id];
+      const hasFeedVideo = Boolean(currentFeed && currentFeed.url);
       const isDemoVideo = sourceType === 'demo_gate';
       const isCustomVideo = sourceType === 'custom' && customVideoUrl;
       const isWebcamVideo = sourceType === 'webcam' && streamRef.current;
       const hasActiveVideo =
-        (isDemoVideo || isCustomVideo || isWebcamVideo) &&
+        (hasFeedVideo || isDemoVideo || isCustomVideo || isWebcamVideo) &&
         videoRef.current &&
         videoRef.current.readyState >= 2;
 
+      // Ground plane coordinates: strictly track people on the ground floor walkway
+      const groundMinY = canvas.height * 0.46;
+      const groundMaxY = canvas.height * 0.88;
+
       // ── STEP 1: RENDER VIDEO BACKGROUND OR SYNTHETIC SURVEILLANCE GENERATOR ───
       if (hasActiveVideo && videoRef.current) {
-        // Draw real CCTV video frame (0:10 to 0:17), custom uploaded video, or webcam
+        // Draw real CCTV video frame, custom uploaded video, or webcam
         ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
 
-        // Update pedestrian motion for tracking overlay across the video
+        // Update pedestrian motion strictly on the ground floor plane
         const peds = pedestriansRef.current;
-        const horizonY = canvas.height * 0.18;
         for (const p of peds) {
           if (isPlaying) {
             p.y += p.vy;
             p.x += p.vx;
 
             // Boundary bounce
-            if (p.x < 50) { p.x = 50; p.vx *= -1; }
-            if (p.x > canvas.width - 50) { p.x = canvas.width - 50; p.vx *= -1; }
+            if (p.x < 60) { p.x = 60; p.vx *= -1; }
+            if (p.x > canvas.width - 60) { p.x = canvas.width - 60; p.vx *= -1; }
 
-            // Loop back to top once passed turnstile
-            if (p.y > canvas.height + 40) {
-              p.y = horizonY + 10;
-              p.x = 70 + Math.random() * (canvas.width - 140);
-              p.vy = (0.9 + Math.random() * 1.5) * (risk === 'critical' ? 1.6 : 1.1);
+            // Loop back to ground floor entrance once walked past turnstile
+            if (p.y > groundMaxY + 20) {
+              p.y = groundMinY + Math.random() * 10;
+              p.x = 80 + Math.random() * (canvas.width - 160);
+              p.vy = (0.8 + Math.random() * 1.4) * (risk === 'critical' ? 1.5 : 1.0);
             }
           }
 
-          // Depth scaling
-          const depth = Math.max(0.4, (p.y - horizonY) / (canvas.height - horizonY));
+          // Depth scaling strictly on the ground floor plane
+          const depth = Math.max(0.45, Math.min(1.0, (p.y - groundMinY) / (groundMaxY - groundMinY)));
           const w = 18 * depth;
           const h = 42 * depth;
           p.boxW = w * 1.5;
@@ -318,27 +401,34 @@ export function CCTVModal({ isOpen, onClose, initialZoneId = 'gate-b' }: CCTVMod
       } else {
         // ── SYNTHETIC HIGH-DEF SURVEILLANCE VIDEO GENERATOR ────────────────
         // Render photorealistic concourse perspective, lane tiles, turnstiles
-        ctx.fillStyle = '#090d16';
+        ctx.fillStyle = '#080d1a';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // Perspective concourse pavement grid
+        // Ground Floor Grid lines (strictly on ground plane from groundMinY downwards)
         ctx.strokeStyle = '#1e293b';
         ctx.lineWidth = 1;
-        const horizonY = canvas.height * 0.18;
-
         for (let x = 0; x <= canvas.width; x += 64) {
           ctx.beginPath();
-          ctx.moveTo(canvas.width * 0.5 + (x - canvas.width * 0.5) * 0.25, horizonY);
+          ctx.moveTo(canvas.width * 0.5 + (x - canvas.width * 0.5) * 0.35, groundMinY - 10);
           ctx.lineTo(x, canvas.height);
           ctx.stroke();
         }
-
-        for (let y = horizonY; y <= canvas.height; y += 38) {
+        for (let y = groundMinY - 10; y <= canvas.height; y += 38) {
           ctx.beginPath();
           ctx.moveTo(0, y);
           ctx.lineTo(canvas.width, y);
           ctx.stroke();
         }
+
+        // Upper canopy header barrier
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(0, 0, canvas.width, groundMinY - 10);
+        ctx.strokeStyle = '#334155';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(0, groundMinY - 10);
+        ctx.lineTo(canvas.width, groundMinY - 10);
+        ctx.stroke();
 
         // Turnstile Gate Barrier Columns
         const turnstileCount = 4;
@@ -367,7 +457,7 @@ export function CCTVModal({ isOpen, onClose, initialZoneId = 'gate-b' }: CCTVMod
         ctx.fillStyle = gradient;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // Draw Walking Pedestrian Silhouettes
+        // Draw Walking Pedestrian Silhouettes strictly on the ground
         const peds = pedestriansRef.current;
         for (const p of peds) {
           if (isPlaying) {
@@ -375,19 +465,19 @@ export function CCTVModal({ isOpen, onClose, initialZoneId = 'gate-b' }: CCTVMod
             p.x += p.vx;
 
             // Boundary bounce
-            if (p.x < 50) { p.x = 50; p.vx *= -1; }
-            if (p.x > canvas.width - 50) { p.x = canvas.width - 50; p.vx *= -1; }
+            if (p.x < 60) { p.x = 60; p.vx *= -1; }
+            if (p.x > canvas.width - 60) { p.x = canvas.width - 60; p.vx *= -1; }
 
-            // Loop back to top once passed turnstile
-            if (p.y > canvas.height + 40) {
-              p.y = horizonY + 10;
-              p.x = 70 + Math.random() * (canvas.width - 140);
-              p.vy = (0.9 + Math.random() * 1.5) * (risk === 'critical' ? 1.6 : 1.1);
+            // Loop back to ground floor entrance once passed turnstile
+            if (p.y > groundMaxY + 20) {
+              p.y = groundMinY + Math.random() * 10;
+              p.x = 80 + Math.random() * (canvas.width - 160);
+              p.vy = (0.8 + Math.random() * 1.4) * (risk === 'critical' ? 1.5 : 1.0);
             }
           }
 
-          // Depth scaling
-          const depth = Math.max(0.4, (p.y - horizonY) / (canvas.height - horizonY));
+          // Depth scaling strictly on the ground
+          const depth = Math.max(0.45, Math.min(1.0, (p.y - groundMinY) / (groundMaxY - groundMinY)));
           const w = 18 * depth;
           const h = 42 * depth;
           p.boxW = w * 1.5;
@@ -498,7 +588,9 @@ export function CCTVModal({ isOpen, onClose, initialZoneId = 'gate-b' }: CCTVMod
         const bx = p.x - p.boxW / 2;
         const by = p.y - p.boxH / 2;
 
-        const isTracked = hasActiveVideo ? i < 14 : true;
+        // Strict ground filter: only track people standing/walking on the ground plane
+        const isOnGround = p.y >= groundMinY - 15 && p.y <= groundMaxY + 25;
+        const isTracked = isOnGround && (hasActiveVideo ? i < 14 : true);
         if (showBoxes && isTracked) {
           // Bounding Box
           ctx.strokeStyle = boxColor;
@@ -764,6 +856,17 @@ export function CCTVModal({ isOpen, onClose, initialZoneId = 'gate-b' }: CCTVMod
                 6-Cam Matrix
               </button>
             </div>
+
+            {/* Configure 6-Cam Videos Button */}
+            <button
+              type="button"
+              onClick={() => setIsFeedManagerOpen(true)}
+              className="flex items-center gap-1.5 rounded-lg border border-cyan-500/50 bg-cyan-950/60 hover:bg-cyan-900/80 px-2.5 py-1 text-xs font-mono text-cyan-300 transition shadow-sm"
+              title="Add or change video feeds for all 6 cameras"
+            >
+              <Video className="h-3 w-3 text-cyan-400" />
+              <span>Configure 6 Cam Feeds</span>
+            </button>
 
             <button
               type="button"
@@ -1090,6 +1193,10 @@ export function CCTVModal({ isOpen, onClose, initialZoneId = 'gate-b' }: CCTVMod
                   zone={zones[cam.zoneId]}
                   prediction={predictions[cam.zoneId]}
                   isSelected={selectedCam.id === cam.id}
+                  videoUrl={cameraFeeds[cam.id]?.url}
+                  videoName={cameraFeeds[cam.id]?.name}
+                  onUploadVideo={(file) => handleAssignVideoToCam(cam.id, file)}
+                  onResetVideo={() => handleResetVideoCam(cam.id)}
                   onSelect={() => {
                     setSelectedCam(cam);
                     setViewMode('single');
@@ -1119,6 +1226,128 @@ export function CCTVModal({ isOpen, onClose, initialZoneId = 'gate-b' }: CCTVMod
             Close Feed
           </button>
         </div>
+
+        {/* 6-Camera Multi-Feed Manager Dialog */}
+        {isFeedManagerOpen && (
+          <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-in fade-in duration-150">
+            <div className="w-full max-w-3xl rounded-2xl border-2 border-cyan-500/40 bg-slate-950 p-5 shadow-2xl flex flex-col max-h-[90vh]">
+              {/* Header */}
+              <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 rounded-xl bg-cyan-950/80 border border-cyan-500/40 text-cyan-400">
+                    <Video className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-display font-bold text-white text-base">
+                      6-Camera Video Feeds Manager
+                    </h3>
+                    <p className="text-xs text-slate-400">
+                      Assign independent video files (.mp4/.webm) or streaming URLs for each camera preview in the matrix.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsFeedManagerOpen(false)}
+                  className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white transition"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              {/* Camera List */}
+              <div className="flex-1 overflow-y-auto space-y-3 pr-1">
+                {CAMERAS.map((cam) => {
+                  const feed = cameraFeeds[cam.id];
+                  const hasCustom = Boolean(feed?.url);
+                  const isCrowdDemo = feed?.url === '/videos/cctv-demo.mp4';
+
+                  return (
+                    <div
+                      key={cam.id}
+                      className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-xl border border-slate-800 bg-slate-900/60 hover:border-slate-700 transition"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="font-mono text-xs font-bold px-2 py-1 rounded bg-slate-800 border border-slate-700 text-cyan-400 shrink-0">
+                          {cam.id}
+                        </span>
+                        <div>
+                          <div className="font-bold text-white text-xs">{cam.name}</div>
+                          <div className="text-[11px] font-mono text-slate-400 flex items-center gap-1.5">
+                            <span>Status:</span>
+                            {hasCustom ? (
+                              <span className="text-emerald-400 font-semibold flex items-center gap-1">
+                                ● Video Active ({feed?.name})
+                              </span>
+                            ) : (
+                              <span className="text-slate-500">○ Simulated Concourse Feed</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                        {/* Upload MP4 button */}
+                        <label className="cursor-pointer flex items-center gap-1 rounded-lg border border-cyan-500/40 bg-cyan-950/60 hover:bg-cyan-900/80 px-2.5 py-1 text-xs font-mono text-cyan-300 transition">
+                          <Upload className="h-3 w-3 text-cyan-400" />
+                          <span>Upload MP4</span>
+                          <input
+                            type="file"
+                            accept="video/*"
+                            className="hidden"
+                            onChange={(e) => {
+                              const f = e.target.files?.[0];
+                              if (f) handleAssignVideoToCam(cam.id, f);
+                            }}
+                          />
+                        </label>
+
+                        {/* Set Demo Video */}
+                        {!isCrowdDemo && (
+                          <button
+                            type="button"
+                            onClick={() => handleSetVideoUrlToCam(cam.id, '/videos/cctv-demo.mp4', 'Demo Crowd (0:10-0:17)')}
+                            className="flex items-center gap-1 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 px-2.5 py-1 text-xs font-mono text-slate-300 transition"
+                            title="Load the 0:10 to 0:17 YouTube crowd clip"
+                          >
+                            <Video className="h-3 w-3 text-amber-400" />
+                            <span>Use Crowd Clip</span>
+                          </button>
+                        )}
+
+                        {/* Reset button */}
+                        {hasCustom && (
+                          <button
+                            type="button"
+                            onClick={() => handleResetVideoCam(cam.id)}
+                            className="rounded-lg border border-slate-700 bg-slate-800 hover:bg-rose-950/60 hover:border-rose-500/50 p-1.5 text-slate-400 hover:text-rose-300 transition"
+                            title="Clear video & reset to simulated feed"
+                          >
+                            <RotateCcw className="h-3.5 w-3.5" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Footer */}
+              <div className="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between font-mono text-xs text-slate-400">
+                <span className="text-[11px] text-cyan-400">
+                  Tip: Uploading or assigning videos immediately updates matrix previews & single feeds.
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setIsFeedManagerOpen(false)}
+                  className="rounded-lg bg-cyan-600 hover:bg-cyan-500 px-4 py-1.5 font-bold text-white transition shadow-md"
+                >
+                  Done
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
