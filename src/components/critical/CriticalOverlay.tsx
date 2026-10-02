@@ -1,6 +1,8 @@
+import { useEffect, useState } from 'react';
 import './critical.css';
-import { Siren, Zap } from 'lucide-react';
+import { Siren, Zap, Volume2, VolumeX } from 'lucide-react';
 import { useCommandCenter } from '@/state/CommandCenterProvider';
+import { getAlertMuted, setAlertMuted, startSiren, stopSiren } from '@/lib/audioAlert';
 
 /** mm:ss from minutes. Caps at 99:59 so the banner never overflows. */
 function formatCountdown(minutes: number | null): string {
@@ -12,17 +14,38 @@ function formatCountdown(minutes: number | null): string {
 }
 
 /**
- * Full-screen CRITICAL state: pulsing red frame around the viewport plus a
- * sticky banner with a breach countdown and a one-click execute button.
- * Disappears on its own when the critical alert is resolved.
+ * Full-screen CRITICAL state: pulsing red frame, red gradients from both
+ * screen edges, a looping siren, and a sticky banner with a breach countdown
+ * and a one-click execute button.
+ *
+ * The visuals stay until the critical alert is resolved. The siren stops
+ * earlier if the alert is acknowledged or the user mutes it.
  */
 export function CriticalOverlay() {
   const { alerts, zones, predictions, plan, canExecute, executeResponsePlan } =
     useCommandCenter();
+  const [muted, setMuted] = useState(getAlertMuted);
 
   const critical = alerts.filter(
     (a) => a.riskLevel === 'critical' && a.status !== 'resolved'
   );
+  const sirenActive = alerts.some(
+    (a) => a.riskLevel === 'critical' && a.status === 'active'
+  );
+
+  // Siren runs only while an unacknowledged critical alert exists.
+  useEffect(() => {
+    if (sirenActive && !muted) startSiren();
+    else stopSiren();
+    return () => stopSiren();
+  }, [sirenActive, muted]);
+
+  const toggleMute = () => {
+    const next = !muted;
+    setAlertMuted(next);
+    setMuted(next);
+  };
+
   if (critical.length === 0) return null;
 
   // Most urgent first: smallest time-to-capacity, unknown ETA last.
@@ -39,11 +62,13 @@ export function CriticalOverlay() {
 
   return (
     <>
-      {/* Pulsing frame. Does not block clicks. */}
+      {/* Pulsing frame and side gradients. None of these block clicks. */}
       <div
         aria-hidden="true"
         className="critical-frame pointer-events-none fixed inset-0 z-[60]"
       />
+      <div aria-hidden="true" className="critical-edge critical-edge-left" />
+      <div aria-hidden="true" className="critical-edge critical-edge-right" />
 
       {/* Sticky breach banner */}
       <div
@@ -73,6 +98,14 @@ export function CriticalOverlay() {
               {formatCountdown(eta)}
             </p>
           </div>
+          <button
+            type="button"
+            onClick={toggleMute}
+            aria-label={muted ? 'Unmute siren' : 'Mute siren'}
+            className="rounded-lg border border-red-400/40 p-2 text-red-200 transition hover:bg-red-900/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+          >
+            {muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+          </button>
           {showExecute && (
             <button
               type="button"
