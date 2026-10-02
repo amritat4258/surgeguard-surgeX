@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import {
   CartesianGrid,
   Line,
@@ -9,7 +9,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import type { ZoneId } from '@/types';
+import type { Zone, ZoneId } from '@/types';
 import { useCommandCenter } from '@/state/CommandCenterProvider';
 import { getForecastSeries, getForecastStepMin } from '@/engine/prediction';
 import {
@@ -22,15 +22,25 @@ interface Row {
   t: number; // minutes relative to now (negative = past)
   actual?: number;
   forecast?: number;
+  withoutPlan?: number; // what would have happened with no action
 }
 
 const SHOWN_HISTORY = 12; // past readings shown
 const FORECAST_TICKS = 6; // future readings shown
 
 export function TrendChart() {
-  const { zoneList, zones } = useCommandCenter();
+  const { zoneList, zones, execution, simulatedMinutes } = useCommandCenter();
   const [selected, setSelected] = useState<ZoneId>('gate-b');
   const zone = zones[selected];
+
+  // Keep the last zone snapshot from BEFORE the plan was executed, so we can
+  // keep drawing the "no action" forecast afterwards.
+  const preExecZones = useRef<Record<ZoneId, Zone> | null>(null);
+  if (!execution) preExecZones.current = zones;
+  const frozen =
+    execution && execution.sourceZoneId === selected && !zone.historyTimes
+      ? preExecZones.current?.[selected] ?? null
+      : null;
 
   const data = useMemo(() => {
     const rows: Row[] = [];
@@ -63,8 +73,25 @@ export function TrendChart() {
         rows.push({ t: (i + 1) * step, forecast: value });
       });
     }
+
+    // "Without SurgeGuard": the forecast frozen at the moment of execution,
+    // drawn from that moment onward (sim mode only).
+    if (frozen && execution) {
+      const elapsed = Math.max(0, simulatedMinutes - execution.executedAtMinutes);
+      const start = -elapsed;
+      const firstT = rows.length > 0 ? rows[0].t : start;
+      const series = getForecastSeries(frozen, FORECAST_TICKS * 2);
+      if (series.length > 0) {
+        const pts = [Math.round(frozen.current), ...series];
+        pts.forEach((value, i) => {
+          const t = start + i * MINUTES_PER_TICK;
+          if (t >= firstT) rows.push({ t, withoutPlan: value });
+        });
+      }
+    }
+    rows.sort((a, b) => a.t - b.t);
     return rows;
-  }, [zone]);
+  }, [zone, frozen, execution, simulatedMinutes]);
 
   const tickLabel = (t: number) =>
     t === 0 ? 'now' : `${t > 0 ? '+' : ''}${Math.round(t * 10) / 10}m`;
@@ -143,6 +170,7 @@ export function TrendChart() {
               strokeWidth={2.5}
               dot={false}
               isAnimationActive={false}
+              connectNulls
             />
             <Line
               type="monotone"
@@ -153,10 +181,30 @@ export function TrendChart() {
               strokeDasharray="6 4"
               dot={false}
               isAnimationActive={false}
+              connectNulls
             />
+            {frozen && (
+              <Line
+                type="monotone"
+                dataKey="withoutPlan"
+                name="Without SurgeGuard"
+                stroke="#ef4444"
+                strokeWidth={2.5}
+                strokeDasharray="2 4"
+                dot={false}
+                isAnimationActive={false}
+                connectNulls
+              />
+            )}
           </LineChart>
         </ResponsiveContainer>
       </div>
+      {frozen && (
+        <p className="mt-2 text-xs text-slate-400">
+          <span className="font-semibold text-red-400">Red dotted line:</span> where{' '}
+          {zone.name} was heading if no action had been taken.
+        </p>
+      )}
     </div>
   );
 }
