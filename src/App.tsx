@@ -11,6 +11,7 @@ import { TrendChart } from '@/components/charts/TrendChart';
 import { AlertsPanel } from '@/components/alerts/AlertsPanel';
 import { RecommendationsPanel } from '@/components/recommendations/RecommendationsPanel';
 import { ImpactPanel } from '@/components/impact/ImpactPanel';
+import { CriticalOverlay } from '@/components/critical/CriticalOverlay';
 import { ChaosController } from '@/components/telemetry/ChaosController';
 import { SOSDispatchModal } from '@/components/sos/SOSDispatchModal';
 import { PoliceDispatchModal } from '@/components/government/PoliceDispatchModal';
@@ -36,6 +37,7 @@ function Dashboard() {
 
   return (
     <div className="min-h-screen bg-surface-base font-body text-slate-100">
+      <CriticalOverlay />
       <TopBar />
       <PhaseStepper />
       <main className="mx-auto max-w-7xl space-y-6 p-6 pb-28">

@@ -287,7 +287,7 @@ export function EventMap() {
                 </span>
               </div>
               <p className="text-[11px] text-slate-300 font-mono mt-0.5">
-                {activeSOS.details} · Assigned: {activeSOS.assignedPost}
+                {activeSOS.description} · Assigned: {activeSOS.nearestMedName}
               </p>
             </div>
           </div>

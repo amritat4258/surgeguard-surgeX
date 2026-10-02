@@ -284,7 +284,7 @@ export function ChaosController() {
 
                   <button
                     type="button"
-                    onClick={() => triggerSOS('fainted', 'gate-b')}
+                    onClick={() => triggerSOS('faint', 'gate-b')}
                     className="inline-flex items-center gap-1.5 rounded-lg border border-rose-500/60 bg-rose-600/20 px-3 py-1.5 text-xs font-semibold text-rose-200 hover:bg-rose-600/30 transition shadow-sm animate-pulse"
                   >
                     <Siren className="h-3.5 w-3.5 text-rose-400" />
