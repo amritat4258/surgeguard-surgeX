@@ -1,14 +1,32 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#060A16" />
     <script>
-      try {
-        var t = localStorage.getItem('surgeguard-theme');
-        document.documentElement.dataset.theme = t === 'light' ? 'light' : 'dark';
-      } catch (e) {}
+      (function() {
+        try {
+          var key = 'surgeguard-theme';
+          var saved = localStorage.getItem(key);
+          var theme = saved;
+          if (saved === 'dark') { theme = 'night'; localStorage.setItem(key, 'night'); }
+          else if (saved === 'light') { theme = 'daylight'; localStorage.setItem(key, 'daylight'); }
+          if (theme !== 'night' && theme !== 'daylight' && theme !== 'projector') {
+            var prefersLight = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
+            theme = prefersLight ? 'daylight' : 'night';
+          }
+          var root = document.documentElement;
+          root.dataset.theme = theme;
+          var isDark = theme !== 'daylight';
+          if (isDark) { root.classList.add('dark'); } else { root.classList.remove('dark'); }
+          root.style.colorScheme = isDark ? 'dark' : 'light';
+          var colors = { night: '#060A16', daylight: '#F6F3EE', projector: '#020408' };
+          var meta = document.querySelector('meta[name="theme-color"]');
+          if (meta) meta.setAttribute('content', colors[theme] || '#060A16');
+        } catch (e) {}
+      })();
     </script>
     <title>SurgeGuard — Predictive Command Center</title>
     <meta property="og:image" content="https://bolt.new/static/og_default.png" />
