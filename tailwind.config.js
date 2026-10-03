@@ -12,7 +12,10 @@ const themed = Object.fromEntries(
 
 /** @type {import('tailwindcss').Config} */
 export default {
-  darkMode: ['selector', "[data-theme='dark']"],
+  darkMode: [
+    'selector',
+    '[class~="dark"], [data-theme="night"], [data-theme="projector"], [data-theme="dark"]',
+  ],
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {
@@ -23,8 +26,9 @@ export default {
       },
       colors: {
         ...themed,
-        // Foreground ink: white in dark mode, deep plum in light mode
+        // Foreground ink & muted text
         ink: 'rgb(var(--color-ink) / <alpha-value>)',
+        muted: 'rgb(var(--color-muted) / <alpha-value>)',
         // Semantic risk / status colors
         risk: {
           normal: 'rgb(var(--color-risk-normal) / <alpha-value>)',
@@ -33,6 +37,7 @@ export default {
           critical: 'rgb(var(--color-risk-critical) / <alpha-value>)',
         },
         info: 'rgb(var(--color-info) / <alpha-value>)',
+        'info-contrast': 'rgb(var(--color-info-contrast) / <alpha-value>)',
         // Control-room surface palette
         surface: {
           base: 'rgb(var(--color-surface-base) / <alpha-value>)',
