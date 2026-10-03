@@ -93,7 +93,7 @@ export function RecommendationsPanel() {
               <button
                 onClick={executeResponsePlan}
                 disabled={!canExecute}
-                className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-risk-critical px-4 py-3 font-display text-sm font-bold tracking-wide text-white shadow-critical-glow hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
+                className="btn-execute mt-4 w-full py-3"
               >
                 <Zap className="h-4 w-4" />
                 EXECUTE RESPONSE PLAN

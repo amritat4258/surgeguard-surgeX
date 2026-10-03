@@ -110,7 +110,7 @@ export function CriticalOverlay() {
             <button
               type="button"
               onClick={executeResponsePlan}
-              className="inline-flex items-center gap-2 rounded-lg bg-risk-critical px-4 py-2 font-display text-sm font-bold uppercase tracking-wide text-white shadow-critical-glow transition hover:bg-red-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+              className="btn-execute px-4 py-2 text-sm"
             >
               <Zap className="h-4 w-4" />
               Execute response plan

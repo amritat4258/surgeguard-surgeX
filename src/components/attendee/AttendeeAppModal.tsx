@@ -23,7 +23,6 @@ export default function AttendeeAppModal({ isOpen, onClose }: AttendeeAppModalPr
 
   return (
     <div
-      data-theme="dark"
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
       onClick={onClose}
     >

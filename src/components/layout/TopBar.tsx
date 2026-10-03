@@ -75,10 +75,10 @@ export function TopBar() {
       <div className="flex items-center gap-3">
         <ShieldAlert className="h-7 w-7 text-info" />
         <div>
-          <h1 className="font-display text-xl font-bold tracking-tight text-slate-100">
+          <h1 className="font-display text-xl font-bold tracking-tight text-ink">
             SurgeGuard
           </h1>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-muted">
             Predictive crowd command center
           </p>
         </div>
@@ -191,7 +191,7 @@ export function TopBar() {
         {!isLive && status === 'idle' && (
           <button
             onClick={runSurgeScenario}
-            className="inline-flex items-center gap-2 rounded-lg bg-info px-4 py-2 text-sm font-semibold text-slate-950 hover:opacity-90"
+            className="btn-primary px-4 py-2 text-sm"
           >
             <Play className="h-4 w-4" />
             Run Surge Scenario
@@ -200,7 +200,7 @@ export function TopBar() {
         {!isLive && status === 'running' && (
           <button
             onClick={pause}
-            className="inline-flex items-center gap-2 rounded-lg border border-surface-border bg-surface-raised px-4 py-2 text-sm font-semibold text-slate-200 hover:bg-surface-border"
+            className="btn-tool px-4 py-2 text-sm"
           >
             <Pause className="h-4 w-4" />
             Pause
@@ -209,7 +209,7 @@ export function TopBar() {
         {!isLive && status === 'paused' && (
           <button
             onClick={resume}
-            className="inline-flex items-center gap-2 rounded-lg border border-surface-border bg-surface-raised px-4 py-2 text-sm font-semibold text-slate-200 hover:bg-surface-border"
+            className="btn-tool px-4 py-2 text-sm"
           >
             <Play className="h-4 w-4" />
             Resume
@@ -217,7 +217,7 @@ export function TopBar() {
         )}
         <button
           onClick={reset}
-          className="inline-flex items-center gap-2 rounded-lg border border-surface-border px-4 py-2 text-sm font-semibold text-slate-300 hover:bg-surface-raised"
+          className="btn border border-surface-border text-ink hover:bg-surface-raised px-4 py-2 text-sm"
         >
           <RotateCcw className="h-4 w-4" />
           Reset

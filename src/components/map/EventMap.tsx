@@ -15,6 +15,7 @@ import {
   Camera,
 } from 'lucide-react';
 import { DroneThermalPatrol } from './DroneThermalPatrol';
+import { useThemeTokens } from '@/theme/useThemeTokens';
 import {
   VENUE_FACILITIES,
   getRushColor,
@@ -87,6 +88,7 @@ const legend: { label: string; cls: string }[] = [
 ];
 
 export function EventMap() {
+  const tokens = useThemeTokens();
   const {
     zones,
     predictions,
@@ -359,14 +361,14 @@ export function EventMap() {
             height="480"
             rx="24"
             fill="none"
-            stroke="#334155"
+            stroke={tokens.map.boundary}
             strokeWidth="1.5"
             strokeDasharray="4 4"
           />
           <text
             x="60"
             y="42"
-            fill="#475569"
+            fill={tokens.text.muted}
             fontFamily="monospace"
             fontSize="9"
             fontWeight="bold"
@@ -376,7 +378,7 @@ export function EventMap() {
           <text
             x="500"
             y="495"
-            fill="#475569"
+            fill={tokens.text.muted}
             fontFamily="monospace"
             fontSize="9"
             fontWeight="bold"
@@ -424,15 +426,15 @@ export function EventMap() {
                   width={210}
                   height={24}
                   rx={12}
-                  fill="#022c22"
-                  stroke="#10b981"
+                  fill={tokens.map.food}
+                  stroke={tokens.map.foodBorder}
                   strokeWidth={1.5}
                 />
                 <text
                   x={0}
                   y={4}
                   textAnchor="middle"
-                  className="fill-emerald-300 font-mono text-[11px] font-bold"
+                  className="fill-emerald-400 font-mono text-[11px] font-bold"
                 >
                   ⚡ DIVERSION: {reroutePath.people.toLocaleString()} → {reroutePath.targetName}
                 </text>
@@ -448,15 +450,15 @@ export function EventMap() {
               width="160"
               height="28"
               rx="6"
-              fill="#0f172a"
-              stroke="#38bdf8"
+              fill={tokens.map.structure}
+              stroke={tokens.info}
               strokeWidth="2"
             />
             <text
               x="400"
               y="206"
               textAnchor="middle"
-              className="fill-sky-300 font-display text-[11px] font-extrabold tracking-wider"
+              className="fill-sky-400 font-display text-[11px] font-extrabold tracking-wider"
             >
               ★ MAIN STAGE ★
             </text>
@@ -467,16 +469,16 @@ export function EventMap() {
               width="90"
               height="20"
               rx="4"
-              fill="#1e1b4b"
-              stroke="#818cf8"
-              strokeWidth="1"
+              fill={tokens.map.arena}
+              stroke={tokens.map.arenaBorder}
+              strokeWidth={1}
               strokeDasharray="2 2"
             />
             <text
               x="400"
               y="289"
               textAnchor="middle"
-              className="fill-indigo-300 font-mono text-[9px] font-bold"
+              className="fill-indigo-400 font-mono text-[9px] font-bold"
             >
               VIP ENCLOSURE
             </text>
@@ -612,15 +614,15 @@ export function EventMap() {
               className="cursor-pointer group"
               onClick={() => openCCTV('gate-b')}
             >
-              <circle r="12" fill="#0f172a" stroke="#06b6d4" strokeWidth="2" />
-              <circle r="4" fill="#06b6d4" className="animate-ping" opacity="0.75" />
+              <circle r="12" fill={tokens.surface.panel} stroke={tokens.info} strokeWidth="2" />
+              <circle r="4" fill={tokens.info} className="animate-ping" opacity="0.75" />
               <path
                 d="M -5 -3 L 1 -3 L 5 -6 L 5 6 L 1 3 L -5 3 Z"
-                fill="#38bdf8"
+                fill={tokens.info}
               />
               {/* Camera Badge */}
-              <rect x="-35" y="-22" width="70" height="13" rx="3" fill="#020617" stroke="#06b6d4" strokeWidth="1" />
-              <text x="0" y="-13" textAnchor="middle" fill="#38bdf8" fontFamily="monospace" fontSize="8" fontWeight="bold">
+              <rect x="-35" y="-22" width="70" height="13" rx="3" fill={tokens.surface.base} stroke={tokens.info} strokeWidth="1" />
+              <text x="0" y="-13" textAnchor="middle" fill={tokens.info} fontFamily="monospace" fontSize="8" fontWeight="bold">
                 CAM-GB-02 ● AI
               </text>
             </g>
@@ -642,7 +644,7 @@ export function EventMap() {
               const px = 600 + (p.x / 100) * 120;
               const py = 75 + (p.y / 100) * 50;
               const color =
-                p.risk === 'critical' ? '#ef4444' : p.risk === 'warning' ? '#f59e0b' : '#10b981';
+                p.risk === 'critical' ? tokens.risk.critical : p.risk === 'warning' ? tokens.risk.warning : tokens.risk.normal;
 
               return (
                 <g key={`cctv-ped-${p.id}`} className="transition-all duration-300">
@@ -657,7 +659,7 @@ export function EventMap() {
                     opacity="0.8"
                   />
                   {/* Pedestrian Head Dot */}
-                  <circle cx={px} cy={py} r="2.8" fill={color} stroke="#020617" strokeWidth="0.8">
+                  <circle cx={px} cy={py} r="2.8" fill={color} stroke={tokens.surface.base} strokeWidth="0.8">
                     <title>{`Track #${p.id} | Velocity: ${(p.speed * 1.1).toFixed(1)} m/s | Risk: ${p.risk}`}</title>
                   </circle>
                   {p.risk === 'critical' && (
@@ -746,7 +748,7 @@ export function EventMap() {
                   x={0}
                   y={29}
                   textAnchor="middle"
-                  fill="#94a3b8"
+                  fill={tokens.text.muted}
                   fontFamily="monospace"
                   fontSize={9}
                   fontWeight="bold"
