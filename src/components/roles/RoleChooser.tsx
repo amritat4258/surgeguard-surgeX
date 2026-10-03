@@ -7,6 +7,7 @@ export default function RoleChooser() {
       data-theme="dark"
       className="flex min-h-[100dvh] items-center justify-center bg-slate-950 px-4 py-8 font-body text-slate-100"
     >
+      {/* Content */}
       <div className="w-full max-w-lg">
         <div className="mb-8 text-center">
           <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600 shadow-lg">

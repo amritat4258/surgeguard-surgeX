@@ -1,4 +1,4 @@
-﻿import type { ZoneId } from '@/types';
+import type { ZoneId } from '@/types';
 
 // Same 800 x 530 drawing space as the organizer's EventMap.
 // (Copied here on purpose so the organizer map stays untouched.)
@@ -55,6 +55,90 @@ export function walkMinutesFromMeters(meters: number): number {
 /** Whole minutes for display (never shows 0). */
 export function walkLabel(walkMin: number): number {
   return Math.max(1, Math.round(walkMin));
+}
+
+export interface GpsBounds {
+  minLat: number;
+  maxLat: number;
+  minLng: number;
+  maxLng: number;
+}
+
+// MMRDA Grounds BKC Mumbai approximate GPS bounds
+export const VENUE_GPS_BOUNDS: GpsBounds = {
+  minLat: 19.0600,
+  maxLat: 19.0680,
+  minLng: 72.8620,
+  maxLng: 72.8720,
+};
+
+/** Convert real-world Lat/Lng to 800 x 530 venue map coordinates. Returns null if outside venue. */
+export function gpsToVenuePoint(lat: number, lng: number, bounds = VENUE_GPS_BOUNDS): Point | null {
+  if (lat < bounds.minLat || lat > bounds.maxLat || lng < bounds.minLng || lng > bounds.maxLng) {
+    return null; // outside venue bounds
+  }
+  const xRatio = (lng - bounds.minLng) / (bounds.maxLng - bounds.minLng);
+  // Lat increases northward (up), SVG Y increases southward (down)
+  const yRatio = 1 - (lat - bounds.minLat) / (bounds.maxLat - bounds.minLat);
+
+  const x = MAP_BOUNDS.minX + xRatio * (MAP_BOUNDS.maxX - MAP_BOUNDS.minX);
+  const y = MAP_BOUNDS.minY + yRatio * (MAP_BOUNDS.maxY - MAP_BOUNDS.minY);
+  return clampToVenue({ x, y });
+}
+
+export interface NavigationStep {
+  icon: string;
+  text: string;
+  distanceM?: number;
+}
+
+/** Generate up to 3 turn-by-turn text steps from position to a target facility. */
+export function generateNavigationSteps(from: Point, to: Point, targetName: string, queueMin: number): NavigationStep[] {
+  const totalDist = distanceMeters(from, to);
+  const fromZone = zoneAt(from);
+  const toZone = zoneAt(to);
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+
+  const steps: NavigationStep[] = [];
+
+  // Step 1: Initial departure direction
+  let direction = 'straight ahead';
+  if (Math.abs(dx) > Math.abs(dy)) {
+    direction = dx > 0 ? 'east towards the right concourse' : 'west towards the left concourse';
+  } else {
+    direction = dy > 0 ? 'south towards the rear arena' : 'north towards the stage & gates';
+  }
+  const step1Dist = Math.max(10, Math.round(totalDist * 0.4));
+  steps.push({
+    icon: '🧭',
+    text: `Head ${direction} along the marked crowd pathway.`,
+    distanceM: step1Dist,
+  });
+
+  // Step 2: Landmark passage
+  let landmark = 'the central pedestrian walkway';
+  if (to.y < 200) landmark = 'the Main Stage lighting rig';
+  else if (to.x > 600) landmark = 'the Food Court archway';
+  else if (to.x < 250) landmark = 'the Gate A West promenade';
+  else if (to.y > 400) landmark = 'the South Parking concourse';
+
+  const step2Dist = Math.max(10, Math.round(totalDist * 0.45));
+  steps.push({
+    icon: '🚶',
+    text: `Continue past ${landmark}. Follow overhead green safety signs.`,
+    distanceM: step2Dist,
+  });
+
+  // Step 3: Final arrival
+  const arrivalWait = queueMin > 0 ? ` (approx. ${queueMin} min queue wait)` : ' (immediate access)';
+  steps.push({
+    icon: '📍',
+    text: `Arrive at ${targetName}${arrivalWait}.`,
+    distanceM: Math.max(5, totalDist - step1Dist - step2Dist),
+  });
+
+  return steps.slice(0, 3);
 }
 
 /** Which zone is this point in? Falls back to the nearest zone centre. */

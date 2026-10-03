@@ -1,4 +1,4 @@
-﻿import type { SOSType, ZoneId } from '@/types';
+import type { SOSSeverity, SOSType, ZoneId } from '@/types';
 
 // Messages exchanged between organizer and attendee phones through the gateway.
 // Sensor readings are NOT part of this: those are arrays without a `kind`.
@@ -8,12 +8,20 @@ export const APP_MESSAGE_KINDS = ['sos', 'sos_status', 'broadcast'] as const;
 export const SOS_TYPE_LIST: readonly SOSType[] = [
   'medical',
   'fire',
+  'crush',
+  'security',
   'lost_child',
+  'other',
   'harassment',
   'faint',
   'breathing',
-  'crush',
   'injury',
+];
+
+export const SOS_SEVERITY_LIST: readonly SOSSeverity[] = [
+  'critical',
+  'urgent',
+  'assistance',
 ];
 
 export const ZONE_ID_LIST: readonly ZoneId[] = [
@@ -36,11 +44,15 @@ export interface SosMessage {
   kind: 'sos';
   id: string;
   type: SOSType;
+  severity?: SOSSeverity;
   zoneId: ZoneId;
   ts: number;
   /** attendee pin on the 800 x 530 venue map (optional) */
   x?: number;
   y?: number;
+  note?: string;
+  peopleCount?: number;
+  deviceId?: string;
 }
 
 /** Organizer -> phone */
@@ -49,6 +61,7 @@ export interface SosStatusMessage {
   id: string;
   status: SOSProgress;
   etaSeconds: number;
+  message?: string;
 }
 
 /** Organizer -> phone */
@@ -90,13 +103,34 @@ export function parseAppMessage(raw: unknown): AppMessage | null {
         out.x = m.x;
         out.y = m.y;
       }
+      if (inList(SOS_SEVERITY_LIST, m.severity)) {
+        out.severity = m.severity;
+      }
+      if (isString(m.note, 140)) {
+        out.note = m.note;
+      }
+      if (inRange(m.peopleCount, 1, 100)) {
+        out.peopleCount = Math.round(m.peopleCount);
+      }
+      if (isString(m.deviceId, 60)) {
+        out.deviceId = m.deviceId;
+      }
       return out;
     }
     case 'sos_status': {
       if (!isString(m.id, 40)) return null;
       if (!inList(SOS_PROGRESS, m.status)) return null;
       if (!inRange(m.etaSeconds, 0, 3600)) return null;
-      return { kind: 'sos_status', id: m.id, status: m.status, etaSeconds: Math.round(m.etaSeconds) };
+      const out: SosStatusMessage = {
+        kind: 'sos_status',
+        id: m.id,
+        status: m.status,
+        etaSeconds: Math.round(m.etaSeconds),
+      };
+      if (isString(m.message, 280)) {
+        out.message = m.message;
+      }
+      return out;
     }
     case 'broadcast': {
       if (!isString(m.id, 40)) return null;

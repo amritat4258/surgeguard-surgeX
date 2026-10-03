@@ -1,4 +1,4 @@
-﻿import { useRef, type MouseEvent } from 'react';
+import { useRef, type MouseEvent } from 'react';
 import type { RiskLevel, Zone, ZoneId } from '@/types';
 import { occupancyToRisk } from '@/config/scenario';
 import { VENUE_FACILITIES, type FacilityKind, type VenueFacility } from '@/data/facilities';
@@ -146,16 +146,52 @@ export function VenueMapPicker({
         {/* Route to the chosen stall */}
         {target && (
           <g style={{ pointerEvents: 'none' }}>
+            <defs>
+              <style>{`
+                @keyframes walkDash {
+                  to { stroke-dashoffset: -28; }
+                }
+                .animate-walking-flow {
+                  animation: walkDash 0.9s linear infinite;
+                }
+              `}</style>
+            </defs>
+            {/* Soft background glow for the path */}
+            <line
+              x1={position.x}
+              y1={position.y}
+              x2={target.x}
+              y2={target.y}
+              stroke="#0284c7"
+              strokeWidth={10}
+              strokeOpacity={0.3}
+              strokeLinecap="round"
+            />
+            {/* Animated walking flow dash line */}
             <line
               x1={position.x}
               y1={position.y}
               x2={target.x}
               y2={target.y}
               stroke="#38bdf8"
-              strokeWidth={5}
-              strokeDasharray="10 8"
+              strokeWidth={4.5}
+              strokeDasharray="8 6"
               strokeLinecap="round"
+              className="animate-walking-flow"
             />
+            {/* Target pulse ring */}
+            <circle
+              cx={target.x}
+              cy={target.y}
+              r={28}
+              fill="none"
+              stroke="#38bdf8"
+              strokeWidth={2}
+              strokeDasharray="4 4"
+            >
+              <animate attributeName="r" values="22;36;22" dur="2s" repeatCount="indefinite" />
+              <animate attributeName="opacity" values="0.9;0.2;0.9" dur="2s" repeatCount="indefinite" />
+            </circle>
           </g>
         )}
 
