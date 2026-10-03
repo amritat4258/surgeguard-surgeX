@@ -165,7 +165,7 @@ export function ThemeToggle() {
           ref={menuRef}
           role="menu"
           aria-label="Theme options"
-          className="absolute right-0 top-full z-50 mt-1.5 w-48 rounded-xl border border-surface-border bg-surface-panel p-1.5 shadow-xl backdrop-blur-md animate-in fade-in zoom-in-95 duration-150"
+          className="absolute left-0 top-full z-50 mt-1.5 w-48 rounded-xl border border-surface-border bg-surface-panel p-1.5 shadow-xl backdrop-blur-md animate-in fade-in zoom-in-95 duration-150"
         >
           <div className="px-2 py-1 text-[10px] font-mono uppercase tracking-wider text-slate-400 border-b border-surface-border/50 mb-1">
             Display Mode

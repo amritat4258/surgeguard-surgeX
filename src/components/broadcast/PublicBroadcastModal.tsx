@@ -125,6 +125,7 @@ export function PublicBroadcastModal({ isOpen, onClose }: PublicBroadcastModalPr
             <button
               type="button"
               onClick={onClose}
+              aria-label="Close Public Broadcast Modal"
               className="rounded-lg p-2 text-slate-400 hover:bg-slate-800 hover:text-ink transition"
             >
               <X className="h-5 w-5" />

@@ -189,6 +189,7 @@ export function PoliceDispatchModal({ isOpen, onClose }: PoliceDispatchModalProp
           <button
             type="button"
             onClick={onClose}
+            aria-label="Close Police Modal"
             className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-ink transition"
           >
             <X className="h-5 w-5" />

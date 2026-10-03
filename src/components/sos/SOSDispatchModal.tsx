@@ -115,6 +115,7 @@ export function SOSDispatchModal({ isOpen, onClose }: SOSDispatchModalProps) {
             <button
               type="button"
               onClick={onClose}
+              aria-label="Close SOS Modal"
               className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-ink transition ml-1"
             >
               <X className="h-5 w-5" />
