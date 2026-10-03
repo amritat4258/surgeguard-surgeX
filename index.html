@@ -9,7 +9,8 @@
       (function() {
         try {
           var key = 'surgeguard-theme';
-          var saved = localStorage.getItem(key);
+          var param = new URLSearchParams(window.location.search).get('theme');
+          var saved = param || localStorage.getItem(key);
           var theme = saved;
           if (saved === 'dark') { theme = 'night'; localStorage.setItem(key, 'night'); }
           else if (saved === 'light') { theme = 'daylight'; localStorage.setItem(key, 'daylight'); }

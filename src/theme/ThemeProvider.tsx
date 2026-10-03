@@ -43,6 +43,10 @@ const THEME_COLORS: Record<Theme, string> = {
 export function readInitialTheme(): Theme {
   if (typeof window === 'undefined') return 'night';
   try {
+    const param = new URLSearchParams(window.location.search).get('theme');
+    if (param === 'night' || param === 'daylight' || param === 'projector') {
+      return param;
+    }
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved === 'night' || saved === 'daylight' || saved === 'projector') {
       return saved;
