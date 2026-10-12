@@ -81,7 +81,7 @@ export function ChaosController() {
   return (
     <>
       {/* Floating Control Deck */}
-      <div className="fixed bottom-4 left-1/2 z-40 -translate-x-1/2 w-full max-w-5xl px-4 pointer-events-none">
+      <div className="fixed bottom-3 sm:bottom-4 left-1/2 z-40 -translate-x-1/2 w-full max-w-5xl px-3 sm:px-4 pointer-events-none pb-[env(safe-area-inset-bottom,0px)]">
         <div className="pointer-events-auto rounded-2xl border border-slate-700/80 bg-slate-950/90 p-3 shadow-2xl backdrop-blur-xl">
           {/* Header Bar */}
           <div className="flex flex-wrap items-center justify-between gap-3 text-xs">

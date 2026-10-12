@@ -1,11 +1,12 @@
-export type Role = 'organizer' | 'attendee';
+export type Role = 'organizer' | 'attendee' | 'camera';
 
-/** Reads the role from the page link: ?role=organizer or ?role=attendee. Null means "show the chooser". */
+/** Reads the role from the page link: ?role=organizer, ?role=attendee, or ?role=camera. Null means "show the chooser". */
 export function getRole(): Role | null {
   if (typeof window === 'undefined') return null;
   const params = new URLSearchParams(window.location.search);
-  const role = params.get('role');
+  const role = params.get('role') || params.get('page') || params.get('view');
   if (role === 'organizer' || role === 'attendee') return role;
+  if (role === 'camera' || role === 'cctv') return 'camera';
   return null;
 }
 
