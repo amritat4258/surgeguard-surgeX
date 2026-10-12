@@ -1,4 +1,4 @@
-﻿import { StrictMode } from 'react';
+import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import RoleChooser from '@/components/roles/RoleChooser';
@@ -7,11 +7,13 @@ import { PhoneShell } from '@/components/attendee/PhoneShell';
 import { CommandCenterProvider } from '@/state/CommandCenterProvider';
 import { ThemeProvider } from '@/theme/ThemeProvider';
 import { getRole, goToChooser } from '@/lib/role';
+import { CCTVModal } from '@/components/cctv/CCTVModal';
 import './index.css';
 
 // No ?role in the link  -> role chooser
 // ?role=organizer       -> control-room dashboard (App brings its own provider)
 // ?role=attendee        -> attendee phone app (phone-sized, always live)
+// ?role=camera          -> standalone CCTV Vision & Multi-Camera AI page
 const role = getRole();
 
 const screen =
@@ -22,6 +24,12 @@ const screen =
       <PhoneShell>
         <AttendeeApp onExit={goToChooser} />
       </PhoneShell>
+    </CommandCenterProvider>
+  ) : role === 'camera' ? (
+    <CommandCenterProvider forceLive>
+      <div className="min-h-screen bg-slate-950">
+        <CCTVModal isOpen={true} onClose={goToChooser} />
+      </div>
     </CommandCenterProvider>
   ) : (
     <RoleChooser />

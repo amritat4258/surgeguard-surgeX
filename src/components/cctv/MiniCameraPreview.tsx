@@ -219,7 +219,7 @@ export function MiniCameraPreview({
           : 'border-slate-800'
       }`}
     >
-      {/* Hidden real video element streaming to canvas */}
+      {/* Real video element streaming to canvas (offscreen fixed for iOS WebKit frame continuity) */}
       {hasVideo && (
         <video
           ref={videoRef}
@@ -228,7 +228,7 @@ export function MiniCameraPreview({
           muted
           playsInline
           src={videoUrl}
-          className="hidden"
+          style={{ position: 'fixed', top: -9999, left: -9999, width: 1, height: 1, opacity: 0.01, pointerEvents: 'none' }}
         />
       )}
 
