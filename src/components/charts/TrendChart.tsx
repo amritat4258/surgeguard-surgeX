@@ -98,20 +98,25 @@ export function TrendChart() {
   const tickLabel = (t: number) =>
     t === 0 ? 'now' : `${t > 0 ? '+' : ''}${Math.round(t * 10) / 10}m`;
 
+  const yTickFormatter = (v: number) => {
+    if (v >= 1000) return `${Math.round(v / 100) / 10}k`;
+    return String(v);
+  };
+
   return (
-    <div className="rounded-xl border border-surface-border bg-surface-panel p-4">
+    <div className="rounded-xl border border-surface-border bg-surface-panel p-3.5 sm:p-4">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">
           Crowd Trend &amp; Forecast
         </h2>
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar scroll-smooth whitespace-nowrap py-1 max-w-full">
           {zoneList.map((z) => (
             <button
               key={z.id}
               onClick={() => setSelected(z.id)}
-              className={`rounded-md border px-2.5 py-1 text-xs font-medium ${
+              className={`shrink-0 rounded-md border px-2.5 py-1 text-xs font-medium transition ${
                 z.id === selected
-                  ? 'border-info bg-info/15 text-info'
+                  ? 'border-info bg-info/15 text-info font-semibold'
                   : 'border-surface-border text-slate-400 hover:bg-surface-raised'
               }`}
             >
@@ -123,7 +128,7 @@ export function TrendChart() {
 
       <div className="h-64">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data} margin={{ top: 10, right: 16, bottom: 0, left: 0 }}>
+          <LineChart data={data} margin={{ top: 10, right: 10, bottom: 0, left: -8 }}>
             <CartesianGrid stroke={c.grid} strokeDasharray="3 3" />
             <XAxis
               dataKey="t"
@@ -138,10 +143,10 @@ export function TrendChart() {
                 (dataMin: number) => Math.floor((dataMin * 0.9) / 100) * 100,
                 zone.capacity,
               ]}
-              tickFormatter={(v: number) => v.toLocaleString()}
+              tickFormatter={yTickFormatter}
               stroke={c.axis}
               fontSize={11}
-              width={56}
+              width={42}
             />
             <Tooltip
               contentStyle={{

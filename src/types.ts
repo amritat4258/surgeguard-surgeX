@@ -129,12 +129,16 @@ export type DataMode = 'sim' | 'live';
 export type SOSType =
   | 'medical'
   | 'fire'
+  | 'crush'
+  | 'security'
   | 'lost_child'
+  | 'other'
   | 'harassment'
   | 'faint'
   | 'breathing'
-  | 'crush'
   | 'injury';
+
+export type SOSSeverity = 'critical' | 'urgent' | 'assistance';
 
 export type SOSStatus =
   | 'received'
@@ -169,6 +173,7 @@ export interface SOSBeacon {
   zoneId: ZoneId;
   zoneName: string;
   type: SOSType;
+  severity?: SOSSeverity;
   label: string;
   description: string;
   callerPhone: string;
@@ -177,10 +182,20 @@ export interface SOSBeacon {
   nearestMedName: string;
   etaSeconds: number;
   coordinates: { x: number; y: number };
+  note?: string;
+  peopleCount?: number;
+  deviceId?: string;
+  messageToAttendee?: string;
   responder?: SOSResponder;
   crowdRoute?: CrowdAwareRoute;
   nearbyVolunteersNotified?: number;
   calmMessageSent?: boolean;
+  medkitAllocated?: {
+    medkitId: string;
+    medkitName: string;
+    etaSeconds: number;
+    route?: { x: number; y: number }[];
+  };
 }
 
 export interface VisionTrackedPerson {

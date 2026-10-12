@@ -23,25 +23,26 @@ interface MetricProps {
   sub: string;
   icon: LucideIcon;
   valueClass?: string;
+  className?: string;
 }
 
-function Metric({ label, value, sub, icon: Icon, valueClass }: MetricProps) {
+function Metric({ label, value, sub, icon: Icon, valueClass, className }: MetricProps) {
   return (
-    <div className="rounded-xl border border-surface-border bg-surface-panel p-4">
+    <div className={`rounded-xl border border-surface-border bg-surface-panel p-3 sm:p-4 ${className ?? ''}`}>
       <div className="flex items-center justify-between">
-        <span className="text-xs uppercase tracking-wide text-slate-400">
+        <span className="text-[11px] sm:text-xs uppercase tracking-wide text-slate-400">
           {label}
         </span>
-        <Icon className="h-4 w-4 text-slate-500" />
+        <Icon className="h-4 w-4 text-slate-500 shrink-0" />
       </div>
       <div
-        className={`mt-2 font-mono text-2xl font-bold ${
+        className={`mt-1.5 sm:mt-2 font-mono text-xl sm:text-2xl font-bold truncate ${
           valueClass ?? 'text-slate-100'
         }`}
       >
         {value}
       </div>
-      <div className="mt-1 truncate text-xs text-slate-500">{sub}</div>
+      <div className="mt-0.5 sm:mt-1 truncate text-[11px] sm:text-xs text-slate-500">{sub}</div>
     </div>
   );
 }
@@ -152,7 +153,7 @@ export function MetricCards() {
   return (
     <>
       {/* 5 Core Top-Level Command Metrics */}
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+      <div className="grid grid-cols-2 gap-2.5 sm:gap-3 sm:grid-cols-3 lg:grid-cols-5">
         <Metric
           label="Total Crowd"
           value={Math.round(effectiveCrowd).toLocaleString()}
@@ -185,23 +186,24 @@ export function MetricCards() {
           sub={nextBreach ? nextBreach.name : 'no breach predicted'}
           icon={Timer}
           valueClass={nextBreach ? 'text-risk-critical' : 'text-risk-normal'}
+          className="col-span-2 sm:col-span-1 lg:col-span-1"
         />
       </div>
 
       {/* Venue Environmental & Acoustic Sensor Telemetry HUD Container */}
-      <div className="mt-3 rounded-xl border border-slate-800 bg-slate-900/60 p-3.5 space-y-3 font-mono">
+      <div className="mt-3 rounded-xl border border-slate-800 bg-slate-900/60 p-3 sm:p-3.5 space-y-3 font-mono">
         {/* Environmental Header & Interactive Stress Tuner Controls */}
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800/80 pb-2.5">
           <div className="flex items-center gap-2">
-            <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-sky-500/20 text-sky-400">
+            <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-sky-500/20 text-sky-400 shrink-0">
               <Sparkles className="h-3.5 w-3.5" />
             </span>
             <div>
-              <span className="text-xs font-bold text-slate-200">
-                Venue Acoustic, Heat Stress (WBGT) & Concourse HVAC Telemetry
+              <span className="text-[11px] sm:text-xs font-bold text-slate-200 block sm:inline">
+                Acoustic, Heat Stress (WBGT) &amp; HVAC
               </span>
-              <span className="ml-2 text-[10px] text-slate-400">
-                {crowdOverride !== null ? '⚡ MANUAL STRESS TUNER ACTIVE' : '🟢 AUTO-SYNCED WITH VENUE SENSORS'}
+              <span className="text-[10px] text-slate-400 block sm:inline sm:ml-2">
+                {crowdOverride !== null ? '⚡ MANUAL STRESS TUNER' : '🟢 AUTO-SYNCED'}
               </span>
             </div>
           </div>
@@ -210,10 +212,10 @@ export function MetricCards() {
             <button
               type="button"
               onClick={() => setIsTunerOpen((prev) => !prev)}
-              className="flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-800/80 hover:bg-slate-700 px-2.5 py-1 text-[11px] text-slate-300 transition"
+              className="flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-800/80 hover:bg-slate-700 px-2 sm:px-2.5 py-1 text-[11px] text-slate-300 transition"
             >
               <Sliders className="h-3 w-3 text-sky-400" />
-              <span>{isTunerOpen ? 'Hide Stress Tuner' : 'Adjust Crowd & Stress'}</span>
+              <span>{isTunerOpen ? 'Hide Tuner' : 'Adjust Crowd'}</span>
               {isTunerOpen ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
             </button>
 
@@ -221,10 +223,10 @@ export function MetricCards() {
               <button
                 type="button"
                 onClick={() => setCrowdOverride(null)}
-                className="flex items-center gap-1 rounded-lg border border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/20 px-2.5 py-1 text-[11px] text-emerald-400 transition"
+                className="flex items-center gap-1 rounded-lg border border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/20 px-2 sm:px-2.5 py-1 text-[11px] text-emerald-400 transition"
               >
                 <RotateCcw className="h-3 w-3" />
-                <span>Reset to Live Sensors</span>
+                <span className="hidden sm:inline">Reset</span>
               </button>
             )}
           </div>
@@ -232,14 +234,14 @@ export function MetricCards() {
 
         {/* Collapsible Interactive Crowd & Heat Stress Tuner Slider */}
         {isTunerOpen && (
-          <div className="rounded-xl border border-sky-500/30 bg-slate-950/80 p-3 space-y-2.5 animate-in fade-in duration-200">
-            <div className="flex flex-wrap items-center justify-between gap-1 text-xs">
+          <div className="rounded-xl border border-sky-500/30 bg-slate-950/80 p-2.5 sm:p-3 space-y-2.5 animate-in fade-in duration-200">
+            <div className="flex flex-wrap items-center justify-between gap-1 text-[11px] sm:text-xs">
               <span className="text-slate-300 font-bold flex items-center gap-1.5">
-                <Sliders className="h-3.5 w-3.5 text-sky-400" />
-                Simulate Crowd Volume to Test Environmental & HVAC Response:
+                <Sliders className="h-3.5 w-3.5 text-sky-400 shrink-0" />
+                Simulate Crowd Volume:
               </span>
               <span className="font-mono text-sky-400 font-bold">
-                {effectiveCrowd.toLocaleString()} Attendees ({crowdPct}% Capacity) · Density ~{peakDensity} p/m²
+                {effectiveCrowd.toLocaleString()} ({crowdPct}%) · ~{peakDensity} p/m²
               </span>
             </div>
 
@@ -251,57 +253,57 @@ export function MetricCards() {
               step="500"
               value={effectiveCrowd}
               onChange={(e) => setCrowdOverride(parseInt(e.target.value, 10))}
-              className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-sky-500"
+              className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-sky-500"
             />
 
             {/* Quick Presets */}
-            <div className="flex flex-wrap gap-2 text-xs">
+            <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-1.5 sm:gap-2 text-xs">
               <button
                 type="button"
                 onClick={() => setCrowdOverride(19500)}
-                className={`px-2.5 py-1 rounded-lg border transition text-[11px] flex items-center gap-1 ${
+                className={`px-2 py-1 rounded-lg border transition text-[10px] sm:text-[11px] flex items-center justify-center gap-1 ${
                   effectiveCrowd < 25000
                     ? 'border-emerald-500 bg-emerald-500/20 text-emerald-300 font-bold'
                     : 'border-slate-800 bg-slate-900 text-slate-400 hover:text-ink'
                 }`}
               >
-                <span>🟢 Nominal State (19.5k)</span>
+                <span>🟢 Nominal (19.5k)</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setCrowdOverride(36000)}
-                className={`px-2.5 py-1 rounded-lg border transition text-[11px] flex items-center gap-1 ${
+                className={`px-2 py-1 rounded-lg border transition text-[10px] sm:text-[11px] flex items-center justify-center gap-1 ${
                   effectiveCrowd >= 25000 && effectiveCrowd < 42000
                     ? 'border-amber-500 bg-amber-500/20 text-amber-300 font-bold'
                     : 'border-slate-800 bg-slate-900 text-slate-400 hover:text-ink'
                 }`}
               >
-                <span>🟡 Surge Concourse (36k)</span>
+                <span>🟡 Surge (36k)</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setCrowdOverride(48000)}
-                className={`px-2.5 py-1 rounded-lg border transition text-[11px] flex items-center gap-1 ${
+                className={`px-2 py-1 rounded-lg border transition text-[10px] sm:text-[11px] flex items-center justify-center gap-1 ${
                   effectiveCrowd >= 42000
                     ? 'border-rose-500 bg-rose-500/20 text-rose-300 font-bold'
                     : 'border-slate-800 bg-slate-900 text-slate-400 hover:text-ink'
                 }`}
               >
-                <span>🔴 Critical Crush (48k)</span>
+                <span>🔴 Crush (48k)</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setCrowdOverride(null)}
-                className={`px-2.5 py-1 rounded-lg border transition text-[11px] ml-auto ${
+                className={`px-2 py-1 rounded-lg border transition text-[10px] sm:text-[11px] flex items-center justify-center gap-1 ${
                   crowdOverride === null
                     ? 'border-sky-500/80 bg-sky-500/20 text-sky-300 font-bold'
                     : 'border-slate-800 bg-slate-900 text-slate-400 hover:text-ink'
                 }`}
               >
-                <span>⚡ Live Feed Sync ({actualCrowd.toLocaleString()})</span>
+                <span>⚡ Live Sync</span>
               </button>
             </div>
           </div>

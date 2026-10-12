@@ -41,17 +41,17 @@ export function PhaseStepper() {
   const currentIndex = PHASES.findIndex((p) => p.id === current);
 
   return (
-    <nav className="border-b border-surface-border bg-surface-base px-6 py-3">
-      <ol className="mx-auto flex max-w-7xl items-center gap-2 overflow-x-auto">
+    <nav className="border-b border-surface-border bg-surface-base px-3 sm:px-6 py-2 sm:py-3">
+      <ol className="mx-auto flex max-w-7xl items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar scroll-smooth">
         {PHASES.map((phase, i) => {
           // "Act" is instant, so it counts as done once we reach "measure"
           const done = i < currentIndex;
           const active = i === currentIndex;
           const Icon = phase.icon;
           return (
-            <li key={phase.id} className="flex items-center gap-2">
+            <li key={phase.id} className="flex items-center gap-1.5 sm:gap-2 shrink-0">
               <span
-                className={`flex items-center gap-2 whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-semibold tracking-wide ${
+                className={`flex items-center gap-1.5 sm:gap-2 whitespace-nowrap rounded-full border px-2.5 sm:px-3 py-1 sm:py-1.5 text-[11px] sm:text-xs font-semibold tracking-wide ${
                   active
                     ? 'border-info bg-info/15 text-info'
                     : done

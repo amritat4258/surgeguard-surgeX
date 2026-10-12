@@ -13,24 +13,43 @@ interface RowProps {
 
 function Row({ label, before, after, delta, good }: RowProps) {
   return (
-    <div className="grid grid-cols-[1.2fr_1fr_auto_1fr_auto] items-center gap-3 border-b border-surface-border py-3 last:border-b-0">
-      <span className="text-sm text-slate-300">{label}</span>
-      <span className="text-right font-mono text-lg font-bold text-risk-critical">
-        {before}
-      </span>
-      <ArrowRight className="h-4 w-4 text-slate-500" />
-      <span className="font-mono text-lg font-bold text-risk-normal">
-        {after}
-      </span>
-      <span
-        className={`rounded-full border px-2 py-0.5 font-mono text-[11px] font-semibold ${
-          good
-            ? 'border-risk-normal/40 bg-risk-normal/15 text-risk-normal'
-            : 'border-surface-border bg-surface-raised text-slate-400'
-        }`}
-      >
-        {delta}
-      </span>
+    <div className="flex flex-col sm:grid sm:grid-cols-[1.2fr_1fr_auto_1fr_auto] sm:items-center gap-2 sm:gap-3 border-b border-surface-border py-3 last:border-b-0">
+      <div className="flex items-center justify-between gap-2 sm:contents">
+        <span className="text-xs sm:text-sm font-medium text-slate-300">{label}</span>
+        <span
+          className={`sm:hidden rounded-full border px-2 py-0.5 font-mono text-[10px] font-semibold ${
+            good
+              ? 'border-risk-normal/40 bg-risk-normal/15 text-risk-normal'
+              : 'border-surface-border bg-surface-raised text-slate-400'
+          }`}
+        >
+          {delta}
+        </span>
+      </div>
+      <div className="flex items-center justify-between sm:contents">
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] uppercase tracking-wider text-slate-500 sm:hidden">Before:</span>
+          <span className="font-mono text-base sm:text-lg font-bold text-risk-critical">
+            {before}
+          </span>
+        </div>
+        <ArrowRight className="h-4 w-4 text-slate-500 shrink-0" />
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] uppercase tracking-wider text-slate-500 sm:hidden">After:</span>
+          <span className="font-mono text-base sm:text-lg font-bold text-risk-normal">
+            {after}
+          </span>
+        </div>
+        <span
+          className={`hidden sm:inline-block rounded-full border px-2 py-0.5 font-mono text-[11px] font-semibold ${
+            good
+              ? 'border-risk-normal/40 bg-risk-normal/15 text-risk-normal'
+              : 'border-surface-border bg-surface-raised text-slate-400'
+          }`}
+        >
+          {delta}
+        </span>
+      </div>
     </div>
   );
 }
@@ -82,7 +101,7 @@ export function ImpactPanel() {
           </div>
         </div>
 
-        <div className="grid grid-cols-[1.2fr_1fr_auto_1fr_auto] gap-3 text-[11px] uppercase tracking-wide text-slate-500">
+        <div className="hidden sm:grid sm:grid-cols-[1.2fr_1fr_auto_1fr_auto] gap-3 text-[11px] uppercase tracking-wide text-slate-500">
           <span />
           <span className="text-right">Before</span>
           <span />

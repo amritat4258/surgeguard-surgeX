@@ -740,7 +740,7 @@ export function CCTVModal({ isOpen, onClose, initialZoneId = 'gate-b' }: CCTVMod
   return (
     <div
       data-theme="dark"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-3 backdrop-blur-md animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-0 sm:p-3 backdrop-blur-md animate-in fade-in duration-200"
     >
       {/* Hidden file input for custom video upload */}
       <input
@@ -761,40 +761,40 @@ export function CCTVModal({ isOpen, onClose, initialZoneId = 'gate-b' }: CCTVMod
         className="hidden"
       />
 
-      <div className="relative flex h-[94vh] w-full max-w-7xl flex-col rounded-2xl border border-slate-700 bg-slate-950 text-slate-100 shadow-2xl overflow-hidden">
+      <div className="relative flex h-[100dvh] sm:h-[94vh] w-full max-w-7xl flex-col rounded-none sm:rounded-2xl border-0 sm:border border-slate-700 bg-slate-950 text-slate-100 shadow-2xl overflow-hidden">
         {/* Top Header */}
-        <div className="flex flex-wrap items-center justify-between border-b border-slate-800 bg-slate-900/80 px-5 py-3 gap-3">
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-cyan-500/20 text-cyan-400 border border-cyan-500/30">
-              <Camera className="h-5 w-5" />
+        <div className="flex flex-wrap items-center justify-between border-b border-slate-800 bg-slate-900/80 px-3.5 sm:px-5 py-2.5 sm:py-3 gap-2 sm:gap-3">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+            <div className="flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-xl bg-cyan-500/20 text-cyan-400 border border-cyan-500/30">
+              <Camera className="h-4 w-4 sm:h-5 sm:w-5" />
             </div>
-            <div>
+            <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <h2 className="font-display text-base font-bold text-white tracking-wide">
-                  SurgeGuard Vision // Automated CCTV Intelligence
+                <h2 className="font-display text-sm sm:text-base font-bold text-white tracking-wide truncate">
+                  SurgeGuard Vision
                 </h2>
-                <span className="flex items-center gap-1 rounded-full border border-rose-500/40 bg-rose-500/10 px-2 py-0.5 font-mono text-[10px] font-semibold text-rose-400">
+                <span className="flex items-center gap-1 rounded-full border border-rose-500/40 bg-rose-500/10 px-2 py-0.5 font-mono text-[9px] sm:text-[10px] font-semibold text-rose-400 shrink-0">
                   <span className="h-1.5 w-1.5 rounded-full bg-rose-500 animate-ping" />
                   REC ● 60 FPS
                 </span>
-                <span className="rounded bg-sky-950/80 border border-sky-500/40 px-2 py-0.5 font-mono text-[10px] text-sky-300">
-                  MAP TRACKING SYNC: ON
+                <span className="hidden sm:inline rounded bg-sky-950/80 border border-sky-500/40 px-2 py-0.5 font-mono text-[10px] text-sky-300">
+                  MAP SYNC: ON
                 </span>
               </div>
-              <p className="text-xs text-slate-400">
-                Multi-camera optical flow, turnstile pedestrian tracking & spatial density analysis (YOLOv11-CrowdNet)
+              <p className="text-[11px] sm:text-xs text-slate-400 truncate">
+                Multi-camera optical flow &amp; turnstile pedestrian tracking
               </p>
             </div>
           </div>
 
           {/* Video Source & Controls */}
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
             {/* Source Switcher Pills */}
             <div className="flex rounded-lg border border-slate-700 bg-slate-900 p-0.5 text-xs font-mono">
               <button
                 type="button"
                 onClick={() => setSourceType('demo_gate')}
-                className={`flex items-center gap-1 rounded px-2.5 py-1 transition ${
+                className={`flex items-center gap-1 rounded px-2 sm:px-2.5 py-1 transition ${
                   sourceType === 'demo_gate'
                     ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/40'
                     : 'text-slate-400 hover:text-white'
@@ -802,13 +802,14 @@ export function CCTVModal({ isOpen, onClose, initialZoneId = 'gate-b' }: CCTVMod
                 title="Crowd Surveillance Video (0:10 to 0:17)"
               >
                 <Video className="h-3 w-3" />
-                Crowd Video (0:10-0:17)
+                <span className="hidden sm:inline">Crowd Video</span>
+                <span className="sm:hidden">Demo</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className={`flex items-center gap-1 rounded px-2.5 py-1 transition ${
+                className={`flex items-center gap-1 rounded px-2 sm:px-2.5 py-1 transition ${
                   sourceType === 'custom'
                     ? 'bg-purple-500/20 text-purple-300 font-bold border border-purple-500/40'
                     : 'text-slate-400 hover:text-white'
@@ -816,44 +817,44 @@ export function CCTVModal({ isOpen, onClose, initialZoneId = 'gate-b' }: CCTVMod
                 title="Upload any MP4 video from your PC to run AI tracking"
               >
                 <Upload className="h-3 w-3" />
-                {customVideoName ? customVideoName.slice(0, 10) + '…' : 'Upload MP4'}
+                <span>{customVideoName ? customVideoName.slice(0, 8) + '…' : 'Upload'}</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setSourceType((prev) => (prev === 'webcam' ? 'demo_gate' : 'webcam'))}
-                className={`flex items-center gap-1 rounded px-2.5 py-1 transition ${
+                className={`flex items-center gap-1 rounded px-2 sm:px-2.5 py-1 transition ${
                   sourceType === 'webcam'
                     ? 'bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/40'
                     : 'text-slate-400 hover:text-white'
                 }`}
               >
                 {sourceType === 'webcam' ? <Video className="h-3 w-3 text-emerald-400" /> : <VideoOff className="h-3 w-3 text-slate-400" />}
-                Webcam
+                <span className="hidden sm:inline">Webcam</span>
               </button>
             </div>
 
             {/* View Switcher */}
-            <div className="hidden sm:flex rounded-lg border border-slate-700 bg-slate-900 p-0.5 text-xs">
+            <div className="flex rounded-lg border border-slate-700 bg-slate-900 p-0.5 text-xs">
               <button
                 type="button"
                 onClick={() => setViewMode('single')}
-                className={`flex items-center gap-1 rounded px-2.5 py-1 font-medium transition ${
-                  viewMode === 'single' ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white'
+                className={`flex items-center gap-1 rounded px-2 sm:px-2.5 py-1 font-medium transition ${
+                  viewMode === 'single' ? 'bg-slate-700 text-white font-semibold' : 'text-slate-400 hover:text-white'
                 }`}
               >
                 <Maximize2 className="h-3 w-3" />
-                Focused Feed
+                <span className="hidden sm:inline">Focused</span>
               </button>
               <button
                 type="button"
                 onClick={() => setViewMode('grid')}
-                className={`flex items-center gap-1 rounded px-2.5 py-1 font-medium transition ${
-                  viewMode === 'grid' ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white'
+                className={`flex items-center gap-1 rounded px-2 sm:px-2.5 py-1 font-medium transition ${
+                  viewMode === 'grid' ? 'bg-slate-700 text-white font-semibold' : 'text-slate-400 hover:text-white'
                 }`}
               >
                 <Grid className="h-3 w-3" />
-                6-Cam Matrix
+                <span className="hidden sm:inline">6-Cam</span>
               </button>
             </div>
 
@@ -871,6 +872,7 @@ export function CCTVModal({ isOpen, onClose, initialZoneId = 'gate-b' }: CCTVMod
             <button
               type="button"
               onClick={onClose}
+              aria-label="Close CCTV Modal"
               className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white transition"
             >
               <X className="h-5 w-5" />
@@ -923,11 +925,11 @@ export function CCTVModal({ isOpen, onClose, initialZoneId = 'gate-b' }: CCTVMod
         </div>
 
         {/* Main Body: Video Feed Viewport + Automated CCTV Intelligence Section */}
-        <div className="flex flex-1 overflow-hidden p-3 gap-3">
+        <div className="flex flex-col lg:flex-row flex-1 overflow-y-auto lg:overflow-hidden p-2 sm:p-3 gap-3">
           {viewMode === 'single' ? (
             <>
               {/* LEFT/CENTER: Interactive Video Player with AI Overlay */}
-              <div className="relative flex-1 rounded-2xl border-2 border-slate-800 bg-black overflow-hidden flex flex-col shadow-2xl">
+              <div className="relative flex-none lg:flex-1 w-full min-h-[240px] sm:min-h-[320px] rounded-2xl border-2 border-slate-800 bg-black overflow-hidden flex flex-col shadow-2xl">
                 {/* CCTV HUD Top Bar */}
                 <div className="absolute top-0 inset-x-0 z-20 flex items-center justify-between p-3 bg-gradient-to-b from-black/85 to-transparent font-mono text-xs">
                   <div className="flex items-center gap-2.5">
@@ -1033,7 +1035,7 @@ export function CCTVModal({ isOpen, onClose, initialZoneId = 'gate-b' }: CCTVMod
               </div>
 
               {/* RIGHT: DEDICATED AUTOMATED CCTV INTELLIGENCE SECTION */}
-              <div className="w-80 lg:w-96 flex flex-col rounded-2xl border border-slate-800 bg-slate-900/90 p-3.5 overflow-y-auto space-y-3 shadow-xl">
+              <div className="w-full lg:w-96 flex flex-col rounded-2xl border border-slate-800 bg-slate-900/90 p-3 sm:p-3.5 overflow-y-visible lg:overflow-y-auto space-y-3 shadow-xl shrink-0">
                 {/* Section Header */}
                 <div className="border-b border-slate-800 pb-2 flex items-center justify-between">
                   <div className="flex items-center gap-1.5">
@@ -1185,7 +1187,7 @@ export function CCTVModal({ isOpen, onClose, initialZoneId = 'gate-b' }: CCTVMod
             </>
           ) : (
             /* 6-Camera Multi-View Grid with Live Video & AI Tracking in Preview */
-            <div className="grid flex-1 grid-cols-2 gap-3 md:grid-cols-3 overflow-y-auto pr-1">
+            <div className="grid flex-1 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 overflow-y-auto pr-1">
               {CAMERAS.map((cam) => (
                 <MiniCameraPreview
                   key={cam.id}

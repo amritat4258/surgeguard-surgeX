@@ -1,4 +1,4 @@
-﻿// Fake "sensor gateway" so live mode can be tested without real hardware.
+// Fake "sensor gateway" so live mode can be tested without real hardware.
 //
 //   npm install            (installs the "ws" dev dependency)
 //   npm run feed           (starts this server on ws://localhost:8080)
@@ -53,6 +53,14 @@ reset();
 const wss = new WebSocketServer({ port: PORT, maxPayload: MAX_PAYLOAD_BYTES });
 console.log(`[SurgeGuard Gateway] Mock sensor feed running on ws://localhost:${PORT} (all network interfaces)`);
 
+wss.on('error', (err) => {
+  console.error('[SurgeGuard Gateway] WebSocketServer error:', err);
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('[SurgeGuard Gateway] Uncaught exception:', err);
+});
+
 let autoSurgeArmed = process.env.AUTO_SURGE !== '0';
 
 wss.on('connection', (ws) => {
@@ -83,7 +91,7 @@ wss.on('connection', (ws) => {
       let delivered = 0;
       for (const c of wss.clients) {
         if (c !== ws && c.readyState === 1) {
-          c.send(text);
+          c.send(text, () => {});
           delivered++;
         }
       }
@@ -177,6 +185,6 @@ setInterval(() => {
 
   const payload = JSON.stringify(batch);
   for (const c of wss.clients) {
-    if (c.readyState === 1) c.send(payload);
+    if (c.readyState === 1) c.send(payload, () => {});
   }
 }, tickMs);

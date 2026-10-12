@@ -1,11 +1,13 @@
-export type FacilityKind = 'all' | 'water' | 'medical' | 'energy' | 'restroom' | 'exit';
+export type FacilityKind = 'all' | 'water' | 'medical' | 'energy' | 'food' | 'restroom' | 'exit';
 
 export type RushLevel = 'low' | 'moderate' | 'high' | 'critical';
+
+export type MedkitAvailability = 'available' | 'in-use' | 'restocking';
 
 export interface VenueFacility {
   id: string;
   name: string;
-  kind: 'water' | 'medical' | 'energy' | 'restroom' | 'exit';
+  kind: 'water' | 'medical' | 'energy' | 'food' | 'restroom' | 'exit';
   x: number;
   y: number;
   desc: string;
@@ -19,6 +21,7 @@ export interface VenueFacility {
   tapsOrStaff: string;
   recommendation?: string;
   altFacilityId?: string;
+  medkitStatus?: MedkitAvailability;
 }
 
 export const VENUE_FACILITIES: VenueFacility[] = [
@@ -112,6 +115,23 @@ export const VENUE_FACILITIES: VenueFacility[] = [
     recommendation: '⚠️ Food court queue peaking. Red Bull West Kiosk has shorter wait (8m).',
     altFacilityId: 'e1',
   },
+  {
+    id: 'f1',
+    name: 'Concourse Food Court Plaza',
+    kind: 'food',
+    x: 640,
+    y: 410,
+    desc: 'Hot meals, sandwiches, vegan wraps & cold snacks',
+    status: 'High Rush · 9m Queue',
+    icon: '🍔',
+    badge: 'Food Plaza',
+    color: '#fb923c',
+    queueMin: 9,
+    queueCount: 38,
+    rushLevel: 'moderate',
+    tapsOrStaff: '4 Quick-Serve Counters',
+    recommendation: '🟡 9 min queue. Grab-and-go sandwich counter is faster (3m).',
+  },
 
   // Medical / First Aid & Med Kit Posts
   {
@@ -130,6 +150,7 @@ export const VENUE_FACILITIES: VenueFacility[] = [
     rushLevel: 'low',
     tapsOrStaff: '2 Paramedics & AED Staged',
     recommendation: '🟢 On standby. Immediate zero-delay assistance.',
+    medkitStatus: 'available',
   },
   {
     id: 'm2',
@@ -147,6 +168,25 @@ export const VENUE_FACILITIES: VenueFacility[] = [
     rushLevel: 'low',
     tapsOrStaff: '3 Medics & ORS Station',
     recommendation: '🟢 Rapid cooling and dehydration treatment ready.',
+    medkitStatus: 'available',
+  },
+  {
+    id: 'm3',
+    name: 'Med Kit Post Charlie (South Parking / Gate)',
+    kind: 'medical',
+    x: 420,
+    y: 470,
+    desc: 'Mobile trauma responder, splints, burn kits & burn gels',
+    status: 'Active · Mobile Responder',
+    icon: '🚑',
+    badge: 'Mobile First Aid',
+    color: '#ef4444',
+    queueMin: 0,
+    queueCount: 0,
+    rushLevel: 'low',
+    tapsOrStaff: '1 Mobile Paramedic',
+    recommendation: '🟢 Available for South Sector and Parking emergency triage.',
+    medkitStatus: 'available',
   },
 
   // Restrooms

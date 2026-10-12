@@ -30,12 +30,12 @@ export function RecommendationsPanel() {
     <>
       <div className="rounded-xl border border-surface-border bg-surface-panel p-4 flex flex-col justify-between">
         <div>
-          <div className="mb-3 flex items-center justify-between">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
             <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-slate-400">
               <Lightbulb className="h-4 w-4" />
               Recommended Response
             </h2>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <button
                 type="button"
                 onClick={() => setIsBroadcastOpen(true)}
@@ -93,7 +93,7 @@ export function RecommendationsPanel() {
               <button
                 onClick={executeResponsePlan}
                 disabled={!canExecute}
-                className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-risk-critical px-4 py-3 font-display text-sm font-bold tracking-wide text-white shadow-critical-glow hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
+                className="btn-execute mt-4 w-full py-3"
               >
                 <Zap className="h-4 w-4" />
                 EXECUTE RESPONSE PLAN

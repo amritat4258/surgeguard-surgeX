@@ -45,7 +45,7 @@ function Dashboard() {
       <CriticalOverlay />
       <TopBar />
       <PhaseStepper />
-      <main className="mx-auto max-w-7xl space-y-6 p-6 pb-28">
+      <main className="mx-auto max-w-7xl space-y-4 sm:space-y-6 p-3 sm:p-6 pb-36 sm:pb-32">
         {mode === 'live' && !hasData && (
           <div className="rounded-xl border border-risk-warning/40 bg-risk-warning/10 p-4 text-sm text-risk-warning flex items-center justify-between">
             <span>

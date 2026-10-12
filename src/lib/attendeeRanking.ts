@@ -1,4 +1,4 @@
-﻿import type { Zone } from '@/types';
+import type { Zone } from '@/types';
 import { VENUE_FACILITIES, type FacilityKind, type VenueFacility } from '@/data/facilities';
 import {
   ZONE_SHAPES,
@@ -78,9 +78,9 @@ function measure(f: VenueFacility, from: Point) {
   };
 }
 
-/** Stalls (no exits) of the chosen kind, best total time first. */
+/** Stalls and facilities (including exits) of the chosen kind, best total time first. */
 export function rankFacilities(kind: FacilityKind, from: Point): FacilityOption[] {
-  const all = VENUE_FACILITIES.filter((f) => f.kind !== 'exit').map((f) => measure(f, from));
+  const all = VENUE_FACILITIES.map((f) => measure(f, from));
 
   const bestByKind = new Map<string, string>();
   for (const o of [...all].sort((a, b) => a.totalMin - b.totalMin)) {

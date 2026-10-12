@@ -74,48 +74,50 @@ export function CriticalOverlay() {
       <div
         role="alert"
         aria-live="assertive"
-        className="sticky top-0 z-[55] flex flex-wrap items-center justify-between gap-3 border-b border-risk-critical/60 bg-red-950/95 px-6 py-3 backdrop-blur"
+        className="sticky top-0 z-[55] flex flex-wrap items-center justify-between gap-3 border-b border-risk-critical/60 bg-red-950/95 px-3 sm:px-6 py-2.5 sm:py-3 backdrop-blur"
       >
-        <div className="flex items-center gap-3">
-          <Siren className="h-6 w-6 text-risk-critical motion-safe:animate-pulse" />
+        <div className="flex items-center gap-2.5 sm:gap-3">
+          <Siren className="h-5 w-5 sm:h-6 sm:w-6 shrink-0 text-risk-critical motion-safe:animate-pulse" />
           <div>
-            <p className="font-display text-sm font-bold uppercase tracking-widest text-red-200">
+            <p className="font-display text-xs sm:text-sm font-bold uppercase tracking-wider sm:tracking-widest text-red-200">
               Critical: {zone.name} at {pct}%
               {critical.length > 1 ? ` (+${critical.length - 1} more)` : ''}
             </p>
-            <p className="text-xs text-red-300/80">
+            <p className="text-[11px] sm:text-xs text-red-300/80">
               {predictions[worst.zoneId].explanation}
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
-          <div className="text-right">
-            <p className="font-mono text-[10px] uppercase tracking-widest text-red-300/70">
+        <div className="flex items-center justify-between w-full sm:w-auto gap-3 sm:gap-4">
+          <div className="text-left sm:text-right">
+            <p className="font-mono text-[9px] sm:text-[10px] uppercase tracking-widest text-red-300/70">
               Breach in
             </p>
-            <p className="font-mono text-3xl font-bold leading-none text-risk-critical tabular-nums">
+            <p className="font-mono text-2xl sm:text-3xl font-bold leading-none text-risk-critical tabular-nums">
               {formatCountdown(eta)}
             </p>
           </div>
-          <button
-            type="button"
-            onClick={toggleMute}
-            aria-label={muted ? 'Unmute siren' : 'Mute siren'}
-            className="rounded-lg border border-red-400/40 p-2 text-red-200 transition hover:bg-red-900/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
-          >
-            {muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-          </button>
-          {showExecute && (
+          <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={executeResponsePlan}
-              className="inline-flex items-center gap-2 rounded-lg bg-risk-critical px-4 py-2 font-display text-sm font-bold uppercase tracking-wide text-white shadow-critical-glow transition hover:bg-red-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+              onClick={toggleMute}
+              aria-label={muted ? 'Unmute siren' : 'Mute siren'}
+              className="rounded-lg border border-red-400/40 p-1.5 sm:p-2 text-red-200 transition hover:bg-red-900/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
             >
-              <Zap className="h-4 w-4" />
-              Execute response plan
+              {muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
             </button>
-          )}
+            {showExecute && (
+              <button
+                type="button"
+                onClick={executeResponsePlan}
+                className="btn-execute px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm"
+              >
+                <Zap className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <span>Execute</span>
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </>

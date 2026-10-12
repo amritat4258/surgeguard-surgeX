@@ -54,78 +54,79 @@ export function PublicBroadcastModal({ isOpen, onClose }: PublicBroadcastModalPr
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative flex h-[90vh] w-full max-w-6xl flex-col rounded-2xl border border-slate-700 bg-slate-950 text-slate-100 shadow-2xl overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-0 sm:p-4 backdrop-blur-md animate-in fade-in duration-200">
+      <div className="relative flex h-[100dvh] sm:h-[90vh] w-full max-w-6xl flex-col rounded-none sm:rounded-2xl border-0 sm:border border-slate-700 bg-slate-950 text-slate-100 shadow-2xl overflow-hidden">
         {/* Modal Top Bar */}
-        <div className="flex items-center justify-between border-b border-slate-800 px-6 py-4 bg-slate-900/60">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-info/20 text-info">
-              <Radio className="h-5 w-5 animate-pulse" />
+        <div className="flex flex-wrap items-center justify-between border-b border-slate-800 px-3.5 sm:px-6 py-3 sm:py-4 bg-slate-900/60 gap-2.5">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+            <div className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-xl bg-info/20 text-info">
+              <Radio className="h-4 w-4 sm:h-5 sm:w-5 animate-pulse" />
             </div>
-            <div>
+            <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <h2 className="font-display text-lg font-bold tracking-tight text-ink">
-                  📢 Stadium PA & Digital Screens
+                <h2 className="font-display text-sm sm:text-lg font-bold tracking-tight text-ink truncate">
+                  📢 Stadium PA &amp; Screens
                 </h2>
-                <span className="rounded-full border border-purple-500/40 bg-purple-500/10 px-2.5 py-0.5 font-mono text-[10px] font-semibold text-purple-300 flex items-center gap-1">
+                <span className="rounded-full border border-purple-500/40 bg-purple-500/10 px-2 py-0.5 font-mono text-[9px] sm:text-[10px] font-semibold text-purple-300 flex items-center gap-1 shrink-0">
                   <span className="h-1.5 w-1.5 rounded-full bg-purple-400 animate-ping" />
-                  CONCOURSE AUDIO & LED SYNC
+                  SYNC ON
                 </span>
               </div>
-              <p className="text-xs text-slate-400">
-                Inside stadium speakers, concourse Jumbotrons, stall rush monitors & attendee smartphone wayfinding
+              <p className="text-[11px] sm:text-xs text-slate-400 truncate">
+                Concourse Jumbotrons, audio PA &amp; mobile wayfinding
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 shrink-0">
             {/* View Filter */}
-            <div className="hidden sm:flex rounded-lg border border-slate-700 bg-slate-900 p-0.5 text-xs">
+            <div className="flex items-center overflow-x-auto no-scrollbar rounded-lg border border-slate-700 bg-slate-900 p-0.5 text-xs">
               <button
                 type="button"
                 onClick={() => setActiveTab('both')}
-                className={`rounded px-3 py-1 font-medium transition ${
-                  activeTab === 'both' ? 'bg-slate-700 text-ink' : 'text-slate-400 hover:text-slate-200'
+                className={`shrink-0 rounded px-2.5 sm:px-3 py-1 font-medium transition ${
+                  activeTab === 'both' ? 'bg-slate-700 text-ink font-semibold' : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
-                Split View
+                Split
               </button>
               <button
                 type="button"
                 onClick={() => setActiveTab('led')}
-                className={`flex items-center gap-1 rounded px-3 py-1 font-medium transition ${
-                  activeTab === 'led' ? 'bg-slate-700 text-ink' : 'text-slate-400 hover:text-slate-200'
+                className={`shrink-0 flex items-center gap-1 rounded px-2.5 sm:px-3 py-1 font-medium transition ${
+                  activeTab === 'led' ? 'bg-slate-700 text-ink font-semibold' : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
                 <Tv className="h-3.5 w-3.5" />
-                Stadium LED
+                <span>LED</span>
               </button>
               <button
                 type="button"
                 onClick={() => setActiveTab('mobile')}
-                className={`flex items-center gap-1 rounded px-3 py-1 font-medium transition ${
-                  activeTab === 'mobile' ? 'bg-slate-700 text-ink' : 'text-slate-400 hover:text-slate-200'
+                className={`shrink-0 flex items-center gap-1 rounded px-2.5 sm:px-3 py-1 font-medium transition ${
+                  activeTab === 'mobile' ? 'bg-slate-700 text-ink font-semibold' : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
                 <Smartphone className="h-3.5 w-3.5" />
-                Mobile App
+                <span>App</span>
               </button>
               <button
                 type="button"
                 onClick={() => setActiveTab('stalls')}
-                className={`flex items-center gap-1 rounded px-3 py-1 font-medium transition ${
-                  activeTab === 'stalls' ? 'bg-sky-600 text-white shadow-sm' : 'text-slate-400 hover:text-sky-300'
+                className={`shrink-0 flex items-center gap-1 rounded px-2.5 sm:px-3 py-1 font-medium transition ${
+                  activeTab === 'stalls' ? 'bg-sky-600 text-white font-semibold shadow-sm' : 'text-slate-400 hover:text-sky-300'
                 }`}
               >
                 <Droplets className="h-3.5 w-3.5" />
-                Concourse Stall Rush
+                <span>Stalls</span>
               </button>
             </div>
 
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg p-2 text-slate-400 hover:bg-slate-800 hover:text-ink transition"
+              aria-label="Close Public Broadcast Modal"
+              className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-ink transition shrink-0"
             >
               <X className="h-5 w-5" />
             </button>
@@ -133,7 +134,7 @@ export function PublicBroadcastModal({ isOpen, onClose }: PublicBroadcastModalPr
         </div>
 
         {/* Modal Main Content */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-3.5 sm:p-6">
           {/* Real-time Broadcast Stats Bar */}
           <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
             <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-3">

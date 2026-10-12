@@ -1,18 +1,58 @@
-/* GENERATED. Dark = Tailwind defaults; light = pink & white. */
+/* SurgeGuard Command Center - 3-Theme Color Tokens
+ * Themes:
+ *   1) Night Ops  ([data-theme='night'], [data-theme='dark'], :root): Control room dark language
+ *   2) Daylight   ([data-theme='daylight'], [data-theme='light']): Refined warm-neutral editorial light
+ *   3) Projector  ([data-theme='projector']): High-contrast theater presentation mode with scaled typography
+ */
+
+/* ==========================================================================
+   1. NIGHT OPS (DEFAULT / DARK)
+   ========================================================================== */
 :root,
+[data-theme='night'],
 [data-theme='dark'] {
   color-scheme: dark;
+
+  /* Theme Surfaces */
   --color-surface-base: 6 10 22;
   --color-surface-panel: 12 18 36;
   --color-surface-raised: 18 26 48;
   --color-surface-border: 30 42 68;
+
+  /* Typography Ink */
+  --color-ink: 255 255 255;
+  --color-body: 203 213 225;
+  --color-muted: 148 163 184;
+
+  /* Semantics & Brand */
+  --color-info: 6 182 212;
+  --color-info-contrast: 6 10 22;
   --color-risk-normal: 34 197 94;
   --color-risk-warning: 245 158 11;
   --color-risk-high: 249 115 22;
   --color-risk-critical: 239 68 68;
-  --color-info: 6 182 212;
-  --color-ink: 255 255 255;
-  --color-body: 203 213 225;
+
+  /* Chart & Vector Tokens */
+  --color-chart-grid: 51 65 85;
+  --color-chart-axis: 100 116 139;
+  --color-chart-tooltip-bg: 15 23 42;
+  --color-chart-tooltip-border: 51 65 85;
+  --color-chart-tooltip-text: 226 232 240;
+  --color-chart-actual: 56 189 248;
+  --color-chart-forecast: 249 115 22;
+  --color-chart-danger: 239 68 68;
+
+  /* Map Vector Tokens */
+  --color-map-boundary: 51 65 85;
+  --color-map-structure: 15 23 42;
+  --color-map-structure-border: 30 42 68;
+  --color-map-walkway: 71 85 105;
+  --color-map-arena: 30 27 75;
+  --color-map-arena-border: 129 140 248;
+  --color-map-food: 2 44 34;
+  --color-map-food-border: 16 185 129;
+
+  /* Tailwind Palette Variables */
   --c-slate-50: 248 250 252;
   --c-slate-100: 241 245 249;
   --c-slate-200: 226 232 240;
@@ -24,6 +64,7 @@
   --c-slate-800: 30 41 59;
   --c-slate-900: 15 23 42;
   --c-slate-950: 2 6 23;
+
   --c-emerald-50: 236 253 245;
   --c-emerald-100: 209 250 229;
   --c-emerald-200: 167 243 208;
@@ -35,6 +76,7 @@
   --c-emerald-800: 6 95 70;
   --c-emerald-900: 6 78 59;
   --c-emerald-950: 2 44 34;
+
   --c-amber-50: 255 251 235;
   --c-amber-100: 254 243 199;
   --c-amber-200: 253 230 138;
@@ -46,6 +88,7 @@
   --c-amber-800: 146 64 14;
   --c-amber-900: 120 53 15;
   --c-amber-950: 69 26 3;
+
   --c-sky-50: 240 249 255;
   --c-sky-100: 224 242 254;
   --c-sky-200: 186 230 253;
@@ -57,6 +100,7 @@
   --c-sky-800: 7 89 133;
   --c-sky-900: 12 74 110;
   --c-sky-950: 8 47 73;
+
   --c-rose-50: 255 241 242;
   --c-rose-100: 255 228 230;
   --c-rose-200: 254 205 211;
@@ -68,6 +112,7 @@
   --c-rose-800: 159 18 57;
   --c-rose-900: 136 19 55;
   --c-rose-950: 76 5 25;
+
   --c-red-50: 254 242 242;
   --c-red-100: 254 226 226;
   --c-red-200: 254 202 202;
@@ -79,6 +124,7 @@
   --c-red-800: 153 27 27;
   --c-red-900: 127 29 29;
   --c-red-950: 69 10 10;
+
   --c-orange-50: 255 247 237;
   --c-orange-100: 255 237 213;
   --c-orange-200: 254 215 170;
@@ -90,6 +136,7 @@
   --c-orange-800: 154 52 18;
   --c-orange-900: 124 45 18;
   --c-orange-950: 67 20 7;
+
   --c-purple-50: 250 245 255;
   --c-purple-100: 243 232 255;
   --c-purple-200: 233 213 255;
@@ -101,6 +148,7 @@
   --c-purple-800: 107 33 168;
   --c-purple-900: 88 28 135;
   --c-purple-950: 59 7 100;
+
   --c-indigo-50: 238 242 255;
   --c-indigo-100: 224 231 255;
   --c-indigo-200: 199 210 254;
@@ -112,6 +160,7 @@
   --c-indigo-800: 55 48 163;
   --c-indigo-900: 49 46 129;
   --c-indigo-950: 30 27 75;
+
   --c-blue-50: 239 246 255;
   --c-blue-100: 219 234 254;
   --c-blue-200: 191 219 254;
@@ -125,127 +174,348 @@
   --c-blue-950: 23 37 84;
 }
 
+/* ==========================================================================
+   2. DAYLIGHT (REFINED WARM NEUTRAL LIGHT)
+   ========================================================================== */
+[data-theme='daylight'],
 [data-theme='light'] {
   color-scheme: light;
-  --color-surface-base: 255 245 249;
-  --color-surface-panel: 255 255 255;
-  --color-surface-raised: 253 235 243;
-  --color-surface-border: 246 207 224;
-  --color-risk-normal: 22 163 74;
-  --color-risk-warning: 217 119 6;
-  --color-risk-high: 234 88 12;
-  --color-risk-critical: 220 38 38;
-  --color-info: 219 39 119;
-  --color-ink: 40 22 34;
-  --color-body: 84 53 72;
-  --c-slate-50: 26 13 22;
-  --c-slate-100: 40 22 34;
-  --c-slate-200: 58 35 50;
-  --c-slate-300: 84 53 72;
-  --c-slate-400: 116 74 96;
-  --c-slate-500: 154 101 128;
-  --c-slate-600: 201 138 164;
-  --c-slate-700: 243 191 209;
-  --c-slate-800: 251 219 231;
-  --c-slate-900: 255 238 244;
-  --c-slate-950: 255 247 250;
+
+  /* Theme Surfaces - Clean Warm Neutral */
+  --color-surface-base: 246 243 238;     /* #F6F3EE warm cream base */
+  --color-surface-panel: 255 255 255;    /* #FFFFFF pure card panel */
+  --color-surface-raised: 240 236 228;   /* #F0ECE4 raised surface */
+  --color-surface-border: 226 220 210;   /* #E2DCD2 subtle warm hairline border */
+
+  /* Typography Ink - High Contrast Charcoal & Stone */
+  --color-ink: 28 26 23;                 /* #1C1A17 rich deep charcoal ink (>12:1) */
+  --color-body: 68 64 60;                /* #44403C warm charcoal body text (>7:1) */
+  --color-muted: 120 113 108;            /* #78716C muted caption text (>4.5:1) */
+
+  /* Semantics & Brand - Deepened for Crisp Legibility */
+  --color-info: 2 132 199;               /* #0284C7 crisp deep sky (>4.6:1) */
+  --color-info-contrast: 255 255 255;
+  --color-risk-normal: 21 128 61;        /* #15803D emerald-700 */
+  --color-risk-warning: 180 83 9;        /* #B45309 amber-700 */
+  --color-risk-high: 194 65 12;          /* #C2410C orange-700 */
+  --color-risk-critical: 185 28 28;      /* #B91C1C red-700 */
+
+  /* Chart & Vector Tokens */
+  --color-chart-grid: 226 220 210;       /* #E2DCD2 */
+  --color-chart-axis: 120 113 108;       /* #78716C */
+  --color-chart-tooltip-bg: 255 255 255;
+  --color-chart-tooltip-border: 214 209 201;
+  --color-chart-tooltip-text: 28 26 23;
+  --color-chart-actual: 2 132 199;       /* #0284C7 */
+  --color-chart-forecast: 194 65 12;     /* #C2410C */
+  --color-chart-danger: 185 28 28;       /* #B91C1C */
+
+  /* Map Vector Tokens */
+  --color-map-boundary: 214 209 201;
+  --color-map-structure: 240 236 228;
+  --color-map-structure-border: 200 193 182;
+  --color-map-walkway: 168 162 158;
+  --color-map-arena: 224 231 255;
+  --color-map-arena-border: 99 102 241;
+  --color-map-food: 209 250 229;
+  --color-map-food-border: 16 185 129;
+
+  /* Inverted semantic scales so dark-mode utility classes render crisp warm tones */
+  --c-slate-50: 28 26 23;
+  --c-slate-100: 44 40 37;
+  --c-slate-200: 68 64 60;
+  --c-slate-300: 94 90 82;
+  --c-slate-400: 120 113 108;
+  --c-slate-500: 168 162 158;
+  --c-slate-600: 214 209 201;
+  --c-slate-700: 226 220 210;
+  --c-slate-800: 240 236 228;
+  --c-slate-900: 251 249 245;
+  --c-slate-950: 255 255 255;
+
   --c-emerald-50: 6 78 59;
   --c-emerald-100: 6 95 70;
-  --c-emerald-200: 6 95 70;
-  --c-emerald-300: 4 120 87;
-  --c-emerald-400: 5 150 105;
+  --c-emerald-200: 4 120 87;
+  --c-emerald-300: 5 150 105;
+  --c-emerald-400: 16 185 129;
   --c-emerald-500: 16 185 129;
   --c-emerald-600: 5 150 105;
   --c-emerald-700: 4 120 87;
   --c-emerald-800: 167 243 208;
   --c-emerald-900: 209 250 229;
   --c-emerald-950: 236 253 245;
+
   --c-amber-50: 120 53 15;
   --c-amber-100: 146 64 14;
-  --c-amber-200: 146 64 14;
-  --c-amber-300: 180 83 9;
-  --c-amber-400: 217 119 6;
+  --c-amber-200: 180 83 9;
+  --c-amber-300: 217 119 6;
+  --c-amber-400: 245 158 11;
   --c-amber-500: 245 158 11;
   --c-amber-600: 217 119 6;
   --c-amber-700: 180 83 9;
   --c-amber-800: 253 230 138;
   --c-amber-900: 254 243 199;
   --c-amber-950: 255 251 235;
-  --c-sky-50: 131 24 67;
-  --c-sky-100: 157 23 77;
-  --c-sky-200: 157 23 77;
-  --c-sky-300: 190 24 93;
-  --c-sky-400: 219 39 119;
-  --c-sky-500: 236 72 153;
-  --c-sky-600: 219 39 119;
-  --c-sky-700: 190 24 93;
-  --c-sky-800: 251 207 232;
-  --c-sky-900: 252 231 243;
-  --c-sky-950: 253 242 248;
+
+  --c-sky-50: 12 74 110;
+  --c-sky-100: 3 105 161;
+  --c-sky-200: 2 132 199;
+  --c-sky-300: 14 165 233;
+  --c-sky-400: 56 189 248;
+  --c-sky-500: 14 165 233;
+  --c-sky-600: 2 132 199;
+  --c-sky-700: 3 105 161;
+  --c-sky-800: 186 230 253;
+  --c-sky-900: 224 242 254;
+  --c-sky-950: 240 249 255;
+
   --c-rose-50: 136 19 55;
   --c-rose-100: 159 18 57;
-  --c-rose-200: 159 18 57;
-  --c-rose-300: 190 18 60;
-  --c-rose-400: 225 29 72;
+  --c-rose-200: 190 18 60;
+  --c-rose-300: 225 29 72;
+  --c-rose-400: 244 63 94;
   --c-rose-500: 244 63 94;
   --c-rose-600: 225 29 72;
   --c-rose-700: 190 18 60;
   --c-rose-800: 254 205 211;
   --c-rose-900: 255 228 230;
   --c-rose-950: 255 241 242;
+
   --c-red-50: 127 29 29;
   --c-red-100: 153 27 27;
-  --c-red-200: 153 27 27;
-  --c-red-300: 185 28 28;
-  --c-red-400: 220 38 38;
+  --c-red-200: 185 28 28;
+  --c-red-300: 220 38 38;
+  --c-red-400: 239 68 68;
   --c-red-500: 239 68 68;
   --c-red-600: 220 38 38;
   --c-red-700: 185 28 28;
   --c-red-800: 254 202 202;
   --c-red-900: 254 226 226;
   --c-red-950: 254 242 242;
+
   --c-orange-50: 124 45 18;
   --c-orange-100: 154 52 18;
-  --c-orange-200: 154 52 18;
-  --c-orange-300: 194 65 12;
-  --c-orange-400: 234 88 12;
+  --c-orange-200: 194 65 12;
+  --c-orange-300: 234 88 12;
+  --c-orange-400: 249 115 22;
   --c-orange-500: 249 115 22;
   --c-orange-600: 234 88 12;
   --c-orange-700: 194 65 12;
   --c-orange-800: 254 215 170;
   --c-orange-900: 255 237 213;
   --c-orange-950: 255 247 237;
+
   --c-purple-50: 88 28 135;
   --c-purple-100: 107 33 168;
-  --c-purple-200: 107 33 168;
-  --c-purple-300: 126 34 206;
-  --c-purple-400: 147 51 234;
+  --c-purple-200: 126 34 206;
+  --c-purple-300: 147 51 234;
+  --c-purple-400: 168 85 247;
   --c-purple-500: 168 85 247;
   --c-purple-600: 147 51 234;
   --c-purple-700: 126 34 206;
   --c-purple-800: 233 213 255;
   --c-purple-900: 243 232 255;
   --c-purple-950: 250 245 255;
+
   --c-indigo-50: 49 46 129;
   --c-indigo-100: 55 48 163;
-  --c-indigo-200: 55 48 163;
-  --c-indigo-300: 67 56 202;
-  --c-indigo-400: 79 70 229;
+  --c-indigo-200: 67 56 202;
+  --c-indigo-300: 79 70 229;
+  --c-indigo-400: 99 102 241;
   --c-indigo-500: 99 102 241;
   --c-indigo-600: 79 70 229;
   --c-indigo-700: 67 56 202;
   --c-indigo-800: 199 210 254;
   --c-indigo-900: 224 231 255;
   --c-indigo-950: 238 242 255;
+
   --c-blue-50: 30 58 138;
   --c-blue-100: 30 64 175;
-  --c-blue-200: 30 64 175;
-  --c-blue-300: 29 78 216;
-  --c-blue-400: 37 99 235;
+  --c-blue-200: 29 78 216;
+  --c-blue-300: 37 99 235;
+  --c-blue-400: 59 130 246;
   --c-blue-500: 59 130 246;
   --c-blue-600: 37 99 235;
   --c-blue-700: 29 78 216;
   --c-blue-800: 191 219 254;
   --c-blue-900: 219 234 254;
   --c-blue-950: 239 246 255;
+}
+
+/* ==========================================================================
+   3. PROJECTOR (ULTRA HIGH-CONTRAST AUDITORIUM COMMAND DISPLAY)
+   ========================================================================== */
+[data-theme='projector'] {
+  color-scheme: dark;
+
+  /* Deep pure obsidian surfaces for projector black levels */
+  --color-surface-base: 2 4 8;           /* #020408 near pure black */
+  --color-surface-panel: 6 10 20;        /* #060A14 deep obsidian panel */
+  --color-surface-raised: 15 23 42;      /* #0F172A raised card */
+  --color-surface-border: 71 85 105;     /* #475569 prominent high-vis border */
+
+  /* High legibility ink */
+  --color-ink: 255 255 255;              /* pure 100% white */
+  --color-body: 241 245 249;             /* crisp near-white */
+  --color-muted: 180 190 205;            /* high-contrast secondary */
+
+  /* Hyper-saturated high-visibility indicators */
+  --color-info: 56 189 248;              /* #38BDF8 bright sky */
+  --color-info-contrast: 0 0 0;
+  --color-risk-normal: 34 197 94;        /* #22C55E */
+  --color-risk-warning: 250 204 21;      /* #FACC15 bright yellow */
+  --color-risk-high: 251 146 60;         /* #FB923C high-vis orange */
+  --color-risk-critical: 248 113 113;    /* #F87171 punchy warning red */
+
+  /* Chart & Vector Tokens */
+  --color-chart-grid: 71 85 105;
+  --color-chart-axis: 180 190 205;
+  --color-chart-tooltip-bg: 6 10 20;
+  --color-chart-tooltip-border: 100 116 139;
+  --color-chart-tooltip-text: 255 255 255;
+  --color-chart-actual: 56 189 248;
+  --color-chart-forecast: 251 146 60;
+  --color-chart-danger: 248 113 113;
+
+  /* Map Vector Tokens */
+  --color-map-boundary: 100 116 139;
+  --color-map-structure: 15 23 42;
+  --color-map-structure-border: 148 163 184;
+  --color-map-walkway: 148 163 184;
+  --color-map-arena: 30 27 75;
+  --color-map-arena-border: 165 180 252;
+  --color-map-food: 4 47 34;
+  --color-map-food-border: 52 211 153;
+
+  /* High contrast saturated palette scales */
+  --c-slate-50: 255 255 255;
+  --c-slate-100: 248 250 252;
+  --c-slate-200: 241 245 249;
+  --c-slate-300: 226 232 240;
+  --c-slate-400: 180 190 205;
+  --c-slate-500: 148 163 184;
+  --c-slate-600: 100 116 139;
+  --c-slate-700: 71 85 105;
+  --c-slate-800: 30 41 59;
+  --c-slate-900: 15 23 42;
+  --c-slate-950: 4 7 14;
+
+  --c-emerald-50: 240 253 244;
+  --c-emerald-100: 220 252 231;
+  --c-emerald-200: 187 247 208;
+  --c-emerald-300: 134 239 172;
+  --c-emerald-400: 74 222 128;
+  --c-emerald-500: 34 197 94;
+  --c-emerald-600: 22 163 74;
+  --c-emerald-700: 21 128 61;
+  --c-emerald-800: 22 101 52;
+  --c-emerald-900: 20 83 45;
+  --c-emerald-950: 5 46 22;
+
+  --c-amber-50: 254 252 232;
+  --c-amber-100: 254 249 195;
+  --c-amber-200: 254 240 138;
+  --c-amber-300: 253 224 71;
+  --c-amber-400: 250 204 21;
+  --c-amber-500: 245 158 11;
+  --c-amber-600: 217 119 6;
+  --c-amber-700: 180 83 9;
+  --c-amber-800: 146 64 14;
+  --c-amber-900: 120 53 15;
+  --c-amber-950: 69 26 3;
+
+  --c-sky-50: 240 249 255;
+  --c-sky-100: 224 242 254;
+  --c-sky-200: 186 230 253;
+  --c-sky-300: 125 211 252;
+  --c-sky-400: 56 189 248;
+  --c-sky-500: 14 165 233;
+  --c-sky-600: 2 132 199;
+  --c-sky-700: 3 105 161;
+  --c-sky-800: 7 89 133;
+  --c-sky-900: 12 74 110;
+  --c-sky-950: 8 47 73;
+
+  --c-rose-50: 255 241 242;
+  --c-rose-100: 255 228 230;
+  --c-rose-200: 254 205 211;
+  --c-rose-300: 253 164 175;
+  --c-rose-400: 251 113 133;
+  --c-rose-500: 244 63 94;
+  --c-rose-600: 225 29 72;
+  --c-rose-700: 190 18 60;
+  --c-rose-800: 159 18 57;
+  --c-rose-900: 136 19 55;
+  --c-rose-950: 76 5 25;
+
+  --c-red-50: 254 242 242;
+  --c-red-100: 254 226 226;
+  --c-red-200: 254 202 202;
+  --c-red-300: 252 165 165;
+  --c-red-400: 248 113 113;
+  --c-red-500: 239 68 68;
+  --c-red-600: 220 38 38;
+  --c-red-700: 185 28 28;
+  --c-red-800: 153 27 27;
+  --c-red-900: 127 29 29;
+  --c-red-950: 69 10 10;
+
+  --c-orange-50: 255 247 237;
+  --c-orange-100: 255 237 213;
+  --c-orange-200: 254 215 170;
+  --c-orange-300: 253 186 116;
+  --c-orange-400: 251 146 60;
+  --c-orange-500: 249 115 22;
+  --c-orange-600: 234 88 12;
+  --c-orange-700: 194 65 12;
+  --c-orange-800: 154 52 18;
+  --c-orange-900: 124 45 18;
+  --c-orange-950: 67 20 7;
+
+  --c-purple-50: 250 245 255;
+  --c-purple-100: 243 232 255;
+  --c-purple-200: 233 213 255;
+  --c-purple-300: 216 180 254;
+  --c-purple-400: 192 132 252;
+  --c-purple-500: 168 85 247;
+  --c-purple-600: 147 51 234;
+  --c-purple-700: 126 34 206;
+  --c-purple-800: 107 33 168;
+  --c-purple-900: 88 28 135;
+  --c-purple-950: 59 7 100;
+
+  --c-indigo-50: 238 242 255;
+  --c-indigo-100: 224 231 255;
+  --c-indigo-200: 199 210 254;
+  --c-indigo-300: 165 180 252;
+  --c-indigo-400: 129 140 248;
+  --c-indigo-500: 99 102 241;
+  --c-indigo-600: 79 70 229;
+  --c-indigo-700: 67 56 202;
+  --c-indigo-800: 55 48 163;
+  --c-indigo-900: 49 46 129;
+  --c-indigo-950: 30 27 75;
+
+  --c-blue-50: 239 246 255;
+  --c-blue-100: 219 234 254;
+  --c-blue-200: 191 219 254;
+  --c-blue-300: 147 197 253;
+  --c-blue-400: 96 165 250;
+  --c-blue-500: 59 130 246;
+  --c-blue-600: 37 99 235;
+  --c-blue-700: 29 78 216;
+  --c-blue-800: 30 64 175;
+  --c-blue-900: 30 58 138;
+  --c-blue-950: 23 37 84;
+}
+
+/* ==========================================================================
+   4. PROJECTOR SCALING & REVEAL VIEW-TRANSITION RULES
+   ========================================================================== */
+html[data-theme='projector'] {
+  font-size: 112.5%; /* 18px base root scale for theater distance legibility */
+}
+
+html[data-theme='projector'] .border-surface-border {
+  border-width: 1.5px;
 }

@@ -22,9 +22,13 @@ import type {
   TelemetryLogItem,
   SOSBeacon,
   SOSType,
+  SOSSeverity,
   CCTVVisionData,
   VisionTrackedPerson,
 } from '@/types';
+import { allocateNearestMedkit } from '@/engine/dispatch';
+import { VENUE_FACILITIES } from '@/data/facilities';
+import type { ConnectionMode } from '@/data/useLiveFeed';
 import { predictZone } from '@/engine/prediction';
 import {
   createInitialState,
@@ -163,10 +167,25 @@ const SOS_INFO: Record<SOSType, { label: string; desc: string; responder: Respon
     desc: 'Stage pyrotechnics flare ignited near East corridor truss. Smoke hazard detected.',
     responder: FIRE_TEAM,
   },
+  crush: {
+    label: 'Crowd Crush Hazard / Trapped',
+    desc: 'Barricade crush distress signal received. High perimeter crowd density.',
+    responder: EMT,
+  },
+  security: {
+    label: 'Security Threat / Altercation',
+    desc: 'Bystander reported security threat or altercation in dense crowd.',
+    responder: MARSHAL_SQUAD,
+  },
   lost_child: {
     label: 'Lost Child / Family Separation',
     desc: '7-year-old child separated from guardian at crowded concourse. Wearing blue cap, white shirt.',
     responder: CHILD_PATROL,
+  },
+  other: {
+    label: 'General Assistance / Alert',
+    desc: 'Attendee assistance beacon triggered.',
+    responder: MARSHAL_SQUAD,
   },
   harassment: {
     label: 'Harassment / Safety Disturbance',
@@ -183,11 +202,6 @@ const SOS_INFO: Record<SOSType, { label: string; desc: string; responder: Respon
     desc: 'Asthma/hyperventilation in high density crowd sector.',
     responder: EMT,
   },
-  crush: {
-    label: 'Crowd Crush Hazard / Trapped',
-    desc: 'Barricade crush distress signal received.',
-    responder: EMT,
-  },
   injury: {
     label: 'Severe Physical Trauma',
     desc: 'Laceration / fall injury requiring stretcher.',
@@ -198,34 +212,75 @@ const SOS_INFO: Record<SOSType, { label: string; desc: string; responder: Respon
 function buildBeacon(
   type: SOSType,
   zoneId: ZoneId,
-  opts: { id?: string; point?: { x: number; y: number } } = {}
+  opts: {
+    id?: string;
+    point?: { x: number; y: number };
+    severity?: SOSSeverity;
+    note?: string;
+    peopleCount?: number;
+    deviceId?: string;
+    zones?: Record<ZoneId, Zone>;
+    inUseMedkits?: Set<string>;
+  } = {}
 ): SOSBeacon {
   const info = SOS_INFO[type] ?? SOS_INFO.medical;
   const point = opts.point ?? (zoneId === 'gate-b' ? { x: 630, y: 145 } : { x: 380, y: 240 });
-  const med = opts.point ? nearestOfKind('medical', opts.point) : null;
+  const inUse = opts.inUseMedkits ?? new Set();
+  const currentZones = opts.zones ?? {};
+
+  // Pure nearest medkit allocation
+  const allocation = allocateNearestMedkit(point, currentZones, VENUE_FACILITIES, inUse);
+
+  const nearestMedId = allocation ? allocation.medkit.id : 'escalate';
+  const nearestMedName = allocation ? allocation.medkit.name : 'City EMS / 108 Emergency Ambulance';
+  const etaSeconds = allocation ? allocation.etaSeconds : info.responder.etaSeconds;
+
+  const severity =
+    opts.severity ??
+    (type === 'medical' || type === 'crush' || type === 'fire'
+      ? 'critical'
+      : type === 'security' || type === 'breathing' || type === 'injury'
+      ? 'urgent'
+      : 'assistance');
 
   return {
     id: opts.id ?? `SOS-${Math.floor(100 + Math.random() * 900)}`,
     timestamp: Date.now(),
     zoneId,
-    zoneName: ZONE_NAMES[zoneId],
+    zoneName: ZONE_NAMES[zoneId] ?? zoneId,
     type,
+    severity,
     label: info.label,
-    description: info.desc,
-    callerPhone: `+91 9820${Math.floor(100000 + Math.random() * 900000)}`,
+    description: opts.note
+      ? `${opts.note}${opts.peopleCount ? ` (${opts.peopleCount} affected)` : ''}`
+      : info.desc,
+    callerPhone: opts.deviceId
+      ? `ID: ${opts.deviceId.slice(0, 8)}`
+      : `+91 9820${Math.floor(100000 + Math.random() * 900000)}`,
     status: 'received',
-    nearestMedId: med?.facility.id ?? 'm2',
-    nearestMedName: med?.facility.name ?? 'First Aid Tent Bravo (Gate B/C Sector)',
-    etaSeconds: info.responder.etaSeconds,
+    nearestMedId,
+    nearestMedName,
+    etaSeconds,
     coordinates: point,
+    note: opts.note,
+    peopleCount: opts.peopleCount,
+    deviceId: opts.deviceId,
     responder: info.responder,
+    medkitAllocated: allocation
+      ? {
+          medkitId: allocation.medkit.id,
+          medkitName: allocation.medkit.name,
+          etaSeconds: allocation.etaSeconds,
+          route: allocation.route,
+        }
+      : undefined,
     crowdRoute: {
       avoidZoneId: 'gate-b',
       avoidZoneName: 'Gate B Concourse Chokepoint',
       densityAvoided: 4.4,
       detourName: 'North-West Auxiliary Service Alley',
       timeSavedMinutes: 3.5,
-      waypoints: [
+      waypoints: allocation?.route ?? [
         { x: 515, y: 110 },
         { x: 570, y: 90 },
         { x: 630, y: 145 },
@@ -249,11 +304,17 @@ function vibrate(pattern: number | number[]) {
 export interface MySOS {
   id: string;
   type: SOSType;
+  severity?: SOSSeverity;
   zoneId: ZoneId;
   /** 'sending' = sent from this phone, control room has not confirmed yet */
   status: 'sending' | SOSProgress;
   etaSeconds: number;
   sentAt: number;
+  note?: string;
+  peopleCount?: number;
+  messageFromOrganizer?: string;
+  responderName?: string;
+  medkitName?: string;
 }
 
 export interface InboxItem {
@@ -272,6 +333,16 @@ export interface PushLogItem {
   at: number;
 }
 
+export interface SendMySOSParams {
+  type: SOSType;
+  zoneId: ZoneId;
+  point?: { x: number; y: number };
+  severity?: SOSSeverity;
+  note?: string;
+  peopleCount?: number;
+  deviceId?: string;
+}
+
 interface CommandCenterContextValue {
   role: Role;
   zones: Record<ZoneId, Zone>;
@@ -287,6 +358,7 @@ interface CommandCenterContextValue {
   mode: DataMode;
   setMode: (mode: DataMode) => void;
   feedStatus: FeedStatus;
+  connectionMode: ConnectionMode;
   hasData: boolean;
   canExecute: boolean;
   telemetryLogs: TelemetryLogItem[];
@@ -313,11 +385,16 @@ interface CommandCenterContextValue {
   setIsCCTVModalOpen: (open: boolean) => void;
   openCCTV: (zoneId?: ZoneId) => void;
   cctvActiveZoneId: ZoneId;
-  triggerSOS: (type: SOSType, zoneId?: ZoneId) => void;
+  triggerSOS: (type: SOSType, zoneId?: ZoneId, severity?: SOSSeverity) => void;
+  acknowledgeSOS: (id?: string) => void;
   assignResponder: () => void;
-  dispatchParamedics: () => void;
+  dispatchParamedics: (medkitId?: string) => void;
+  messageAttendee: (text: string) => void;
   sendCalmBroadcast: () => void;
   resolveSOS: () => void;
+  autoDispatchEnabled: boolean;
+  toggleAutoDispatch: () => void;
+  inUseMedkits: string[];
   pause: () => void;
   resume: () => void;
   reset: () => void;
@@ -327,7 +404,8 @@ interface CommandCenterContextValue {
   phoneSOSCount: number;
   // attendee phone
   mySOS: MySOS | null;
-  sendMySOS: (type: SOSType, zoneId: ZoneId, point?: { x: number; y: number }) => boolean;
+  sendMySOS: (paramsOrType: SOSType | SendMySOSParams, zoneId?: ZoneId, point?: { x: number; y: number }) => boolean;
+  cancelMySOS: () => boolean;
   clearMySOS: () => void;
   inbox: InboxItem[];
   markInboxSeen: () => void;
@@ -428,6 +506,15 @@ export function CommandCenterProvider({
     setTelemetryLogs((prev) => [...newItems, ...prev].slice(0, 40));
   }, []);
 
+  const [inUseMedkits, setInUseMedkits] = useState<string[]>([]);
+  const [autoDispatchEnabled, setAutoDispatchEnabled] = useState(false);
+  const inUseMedkitsRef = useRef(inUseMedkits);
+  inUseMedkitsRef.current = inUseMedkits;
+
+  const toggleAutoDispatch = useCallback(() => {
+    setAutoDispatchEnabled((v) => !v);
+  }, []);
+
   // Messages between organizer and phones (validated before use)
   const handleAppMessage = useCallback(
     (raw: Record<string, unknown>) => {
@@ -436,9 +523,16 @@ export function CommandCenterProvider({
 
       if (role === 'attendee') {
         if (msg.kind === 'sos_status') {
-          const { id, status, etaSeconds } = msg;
+          const { id, status, etaSeconds, message } = msg;
           setMySOS((prev) =>
-            prev && prev.id === id ? { ...prev, status, etaSeconds } : prev
+            prev && prev.id === id
+              ? {
+                  ...prev,
+                  status,
+                  etaSeconds,
+                  ...(message ? { messageFromOrganizer: message } : {}),
+                }
+              : prev
           );
           vibrate([200, 100, 200]);
         } else if (msg.kind === 'broadcast') {
@@ -464,13 +558,38 @@ export function CommandCenterProvider({
         seenSosRef.current.add(msg.id);
         const point =
           msg.x !== undefined && msg.y !== undefined ? { x: msg.x, y: msg.y } : undefined;
-        setActiveSOS(buildBeacon(msg.type, msg.zoneId, { id: msg.id, point }));
+
+        const beacon = buildBeacon(msg.type, msg.zoneId, {
+          id: msg.id,
+          point,
+          severity: msg.severity,
+          note: msg.note,
+          peopleCount: msg.peopleCount,
+          deviceId: msg.deviceId,
+          zones: state.zones,
+          inUseMedkits: new Set(inUseMedkitsRef.current),
+        });
+
+        setActiveSOS(beacon);
         setIsSOSModalOpen(true);
         setPhoneSOSCount((c) => c + 1);
         playEmergencyAlertSound();
+
+        // Also add an alert into the control-room alert queue
+        setAlerts((prev) => [
+          {
+            id: `alert-${beacon.id}`,
+            zoneId: beacon.zoneId,
+            riskLevel: beacon.severity === 'critical' ? 'critical' : 'high',
+            message: `🚨 ${beacon.label.toUpperCase()}: ${beacon.description}`,
+            status: 'active',
+            raisedAt: Date.now(),
+          },
+          ...prev,
+        ]);
       }
     },
-    [role]
+    [role, state.zones]
   );
 
   const { status: liveStatus, send: feedSend } = useLiveFeed(
@@ -479,6 +598,12 @@ export function CommandCenterProvider({
     handleAppMessage
   );
   const feedStatus: FeedStatus = mode === 'live' ? liveStatus : 'offline';
+  const connectionMode: ConnectionMode =
+    feedStatus === 'live'
+      ? 'live'
+      : typeof window !== 'undefined' && 'BroadcastChannel' in window
+      ? 'local-only'
+      : 'offline';
 
   // Sim mode tick driver
   useEffect(() => {
@@ -717,23 +842,78 @@ export function CommandCenterProvider({
     if (role === 'attendee') return;
     const b = sosRef.current;
     if (!b) return;
-    const status: SOSProgress = b.status === 'active' ? 'received' : b.status;
-    feedSend({ kind: 'sos_status', id: b.id, status, etaSeconds: b.etaSeconds });
+    const status: SOSProgress = b.status === 'active' ? 'received' : (b.status as SOSProgress);
+    feedSend({
+      kind: 'sos_status',
+      id: b.id,
+      status,
+      etaSeconds: b.etaSeconds,
+      message: b.messageToAttendee,
+    });
   }, [role, activeSOSId, activeSOSStatus, feedSend]);
 
-  const triggerSOS = useCallback((type: SOSType, targetZoneId: ZoneId = 'gate-b') => {
-    setActiveSOS(buildBeacon(type, targetZoneId));
-    setIsSOSModalOpen(true);
-    playEmergencyAlertSound();
-  }, []);
+  const triggerSOS = useCallback(
+    (type: SOSType, targetZoneId: ZoneId = 'gate-b', severity?: SOSSeverity) => {
+      const beacon = buildBeacon(type, targetZoneId, {
+        severity,
+        zones: state.zones,
+        inUseMedkits: new Set(inUseMedkitsRef.current),
+      });
+      setActiveSOS(beacon);
+      setIsSOSModalOpen(true);
+      playEmergencyAlertSound();
+    },
+    [state.zones]
+  );
+
+  const acknowledgeSOS = useCallback((id?: string) => {
+    setActiveSOS((prev) => {
+      if (!prev || (id && prev.id !== id)) return prev;
+      feedSend({ kind: 'sos_status', id: prev.id, status: 'received', etaSeconds: prev.etaSeconds });
+      return { ...prev, status: 'received' };
+    });
+  }, [feedSend]);
 
   const assignResponder = useCallback(() => {
-    setActiveSOS((prev) => (prev ? { ...prev, status: 'assigned' } : null));
-  }, []);
+    setActiveSOS((prev) => {
+      if (!prev) return null;
+      feedSend({ kind: 'sos_status', id: prev.id, status: 'assigned', etaSeconds: prev.etaSeconds });
+      return { ...prev, status: 'assigned' };
+    });
+  }, [feedSend]);
 
-  const dispatchParamedics = useCallback(() => {
-    setActiveSOS((prev) => (prev ? { ...prev, status: 'dispatched', etaSeconds: 28 } : null));
-  }, []);
+  const dispatchParamedics = useCallback(
+    (medkitId?: string) => {
+      setActiveSOS((prev) => {
+        if (!prev) return null;
+        const chosenMedId = medkitId ?? prev.medkitAllocated?.medkitId ?? prev.nearestMedId;
+        if (chosenMedId && chosenMedId !== 'escalate') {
+          setInUseMedkits((m) => (m.includes(chosenMedId) ? m : [...m, chosenMedId]));
+        }
+        const eta = prev.medkitAllocated?.etaSeconds ?? 28;
+        feedSend({ kind: 'sos_status', id: prev.id, status: 'dispatched', etaSeconds: eta });
+        return { ...prev, status: 'dispatched', etaSeconds: eta };
+      });
+    },
+    [feedSend]
+  );
+
+  const messageAttendee = useCallback(
+    (text: string) => {
+      setActiveSOS((prev) => {
+        if (!prev) return null;
+        feedSend({
+          kind: 'sos_status',
+          id: prev.id,
+          status: prev.status === 'active' ? 'received' : (prev.status as SOSProgress),
+          etaSeconds: prev.etaSeconds,
+          message: text,
+        });
+        return { ...prev, messageToAttendee: text };
+      });
+    },
+    [feedSend]
+  );
 
   const sendCalmBroadcast = useCallback(() => {
     setActiveSOS((prev) => (prev ? { ...prev, calmMessageSent: true } : null));
@@ -746,16 +926,59 @@ export function CommandCenterProvider({
 
   const resolveSOS = useCallback(() => {
     const b = sosRef.current;
-    if (b && b.status !== 'resolved') {
+    if (b) {
+      if (b.medkitAllocated?.medkitId) {
+        setInUseMedkits((m) => m.filter((id) => id !== b.medkitAllocated?.medkitId));
+      }
       feedSend({ kind: 'sos_status', id: b.id, status: 'resolved', etaSeconds: 0 });
     }
     setActiveSOS(null);
   }, [feedSend]);
 
+  // Auto-dispatch trigger if enabled
+  useEffect(() => {
+    if (!autoDispatchEnabled || !activeSOS || role === 'attendee') return;
+    if (
+      activeSOS.status === 'received' &&
+      (activeSOS.severity === 'critical' || activeSOS.type === 'medical')
+    ) {
+      const timer = setTimeout(() => {
+        dispatchParamedics();
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [autoDispatchEnabled, activeSOS?.id, activeSOS?.status, activeSOS?.severity, role, dispatchParamedics]);
+
   // ---- SOS (attendee phone side) ---------------------------------------
 
   const sendMySOS = useCallback(
-    (type: SOSType, zoneId: ZoneId, point?: { x: number; y: number }): boolean => {
+    (
+      paramsOrType: SOSType | SendMySOSParams,
+      legacyZoneId?: ZoneId,
+      legacyPoint?: { x: number; y: number }
+    ): boolean => {
+      let type: SOSType;
+      let zoneId: ZoneId;
+      let point: { x: number; y: number } | undefined;
+      let severity: SOSSeverity | undefined;
+      let note: string | undefined;
+      let peopleCount: number | undefined;
+      let deviceId: string | undefined;
+
+      if (typeof paramsOrType === 'object') {
+        type = paramsOrType.type;
+        zoneId = paramsOrType.zoneId;
+        point = paramsOrType.point;
+        severity = paramsOrType.severity;
+        note = paramsOrType.note;
+        peopleCount = paramsOrType.peopleCount;
+        deviceId = paramsOrType.deviceId;
+      } else {
+        type = paramsOrType;
+        zoneId = legacyZoneId ?? 'main-arena';
+        point = legacyPoint;
+      }
+
       const id = `SOS-${Date.now().toString(36).slice(-4).toUpperCase()}${Math.floor(Math.random() * 90 + 10)}`;
       const ok = feedSend({
         kind: 'sos',
@@ -764,13 +987,36 @@ export function CommandCenterProvider({
         zoneId,
         ts: Date.now(),
         ...(point ? { x: Math.round(point.x), y: Math.round(point.y) } : {}),
+        ...(severity ? { severity } : {}),
+        ...(note ? { note } : {}),
+        ...(peopleCount ? { peopleCount } : {}),
+        ...(deviceId ? { deviceId } : {}),
       });
+
       if (!ok) return false;
-      setMySOS({ id, type, zoneId, status: 'sending', etaSeconds: 0, sentAt: Date.now() });
+
+      setMySOS({
+        id,
+        type,
+        severity,
+        zoneId,
+        status: 'sending',
+        etaSeconds: 0,
+        sentAt: Date.now(),
+        note,
+        peopleCount,
+      });
       return true;
     },
     [feedSend]
   );
+
+  const cancelMySOS = useCallback((): boolean => {
+    if (!mySOS) return false;
+    feedSend({ kind: 'sos_status', id: mySOS.id, status: 'resolved', etaSeconds: 0 });
+    setMySOS(null);
+    return true;
+  }, [mySOS, feedSend]);
 
   const clearMySOS = useCallback(() => setMySOS(null), []);
 
@@ -807,6 +1053,7 @@ export function CommandCenterProvider({
     mode,
     setMode,
     feedStatus,
+    connectionMode,
     hasData,
     canExecute,
     telemetryLogs,
@@ -833,15 +1080,21 @@ export function CommandCenterProvider({
     openCCTV,
     cctvActiveZoneId,
     triggerSOS,
+    acknowledgeSOS,
     assignResponder,
     dispatchParamedics,
+    messageAttendee,
     sendCalmBroadcast,
     resolveSOS,
+    autoDispatchEnabled,
+    toggleAutoDispatch,
+    inUseMedkits,
     pause: () => dispatch({ type: 'PAUSE' }),
     resume: () => dispatch({ type: 'RESUME' }),
     reset: () => {
       setAlerts([]);
       setActiveSOS(null);
+      setInUseMedkits([]);
       if (mode === 'live') {
         feedSend({ cmd: 'reset' });
       }
@@ -852,6 +1105,7 @@ export function CommandCenterProvider({
     phoneSOSCount,
     mySOS,
     sendMySOS,
+    cancelMySOS,
     clearMySOS,
     inbox,
     markInboxSeen,
