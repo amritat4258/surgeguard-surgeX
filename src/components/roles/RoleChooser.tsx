@@ -5,19 +5,23 @@ export default function RoleChooser() {
   return (
     <div
       data-theme="dark"
-      className="flex min-h-[100dvh] items-center justify-center bg-slate-950 px-4 py-8 font-body text-slate-100"
+      className="flex min-h-[100dvh] items-center justify-center bg-slate-950 px-4 py-6 sm:py-8 font-body text-slate-100"
+      style={{
+        paddingTop: 'calc(1.5rem + env(safe-area-inset-top, 0px))',
+        paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom, 0px))',
+      }}
     >
       {/* Content */}
       <div className="w-full max-w-lg">
-        <div className="mb-8 text-center">
-          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600 shadow-lg">
+        <div className="mb-6 sm:mb-8 text-center">
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600 shadow-lg shadow-blue-600/30">
             <ShieldCheck className="h-6 w-6 text-white" />
           </div>
-          <h1 className="font-display text-3xl font-bold tracking-tight text-ink">SurgeGuard</h1>
-          <p className="mt-1 text-sm text-slate-400">
-            Predictive command center for mega events
+          <h1 className="font-display text-2xl sm:text-3xl font-bold tracking-tight text-ink">SurgeGuard</h1>
+          <p className="mt-1 text-xs sm:text-sm text-slate-400">
+            Predictive crowd command center for mega events
           </p>
-          <p className="mt-6 text-xs font-semibold uppercase tracking-widest text-slate-500">
+          <p className="mt-4 sm:mt-6 text-[11px] sm:text-xs font-semibold uppercase tracking-widest text-slate-500">
             Choose how you want to continue
           </p>
         </div>

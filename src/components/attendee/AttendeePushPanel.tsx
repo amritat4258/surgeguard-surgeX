@@ -1,4 +1,4 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 import { useCommandCenter } from '@/state/CommandCenterProvider';
 import type { BroadcastSeverity } from '@/data/appMessages';
 
@@ -84,33 +84,35 @@ export function AttendeePushPanel() {
         ))}
       </div>
 
-      <div className="mt-3 flex flex-wrap items-center gap-2">
+      <div className="mt-3 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
         <input
           value={text}
           onChange={(e) => setText(e.target.value)}
           maxLength={200}
           placeholder="Type a custom message to all phones"
-          className="min-w-[200px] flex-1 rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 text-xs text-slate-100 outline-none focus:border-sky-500"
+          className="w-full flex-1 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 sm:py-1.5 text-xs text-slate-100 outline-none focus:border-sky-500"
         />
-        <select
-          value={severity}
-          onChange={(e) => setSeverity(e.target.value as BroadcastSeverity)}
-          className="rounded-lg border border-slate-700 bg-slate-900 px-2 py-1.5 text-xs text-slate-100"
-        >
-          <option value="info">Info</option>
-          <option value="warning">Warning</option>
-          <option value="critical">Critical</option>
-        </select>
-        <button
-          type="button"
-          disabled={!text.trim()}
-          onClick={() => {
-            if (send('Message from control room', text.trim(), severity)) setText('');
-          }}
-          className="rounded-lg bg-sky-600 px-4 py-1.5 text-xs font-bold text-white hover:bg-sky-500 disabled:opacity-40"
-        >
-          Push
-        </button>
+        <div className="flex items-center gap-2">
+          <select
+            value={severity}
+            onChange={(e) => setSeverity(e.target.value as BroadcastSeverity)}
+            className="flex-1 sm:flex-initial rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 sm:py-1.5 text-xs text-slate-100"
+          >
+            <option value="info">Info</option>
+            <option value="warning">Warning</option>
+            <option value="critical">Critical</option>
+          </select>
+          <button
+            type="button"
+            disabled={!text.trim()}
+            onClick={() => {
+              if (send('Message from control room', text.trim(), severity)) setText('');
+            }}
+            className="rounded-lg bg-sky-600 px-5 py-2 sm:py-1.5 text-xs font-bold text-white hover:bg-sky-500 disabled:opacity-40"
+          >
+            Push
+          </button>
+        </div>
       </div>
 
       {error && <p className="mt-2 text-xs text-rose-300">{error}</p>}

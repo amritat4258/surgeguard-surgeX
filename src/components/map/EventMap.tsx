@@ -157,25 +157,27 @@ export function EventMap() {
           <button
             type="button"
             onClick={() => openCCTV(cctvVisionData.zoneId)}
-            className="flex items-center gap-1.5 rounded-lg border border-cyan-500/50 bg-cyan-950/80 hover:bg-cyan-900 px-2.5 py-1 font-mono text-[11px] font-bold text-cyan-300 transition shadow-sm"
+            className="flex items-center gap-1.5 rounded-lg border border-cyan-500/50 bg-cyan-950/80 hover:bg-cyan-900 px-2.5 py-1 font-mono text-[11px] font-bold text-cyan-300 transition shadow-sm shrink-0"
             title="Inspect live CCTV Video Tracking feed"
           >
             <Camera className="h-3.5 w-3.5 text-cyan-400" />
-            <span>CCTV AI ({cctvVisionData.people.length > 0 ? cctvVisionData.people.length : cctvVisionData.count} TRACKED)</span>
+            <span className="hidden sm:inline">CCTV AI ({cctvVisionData.people.length > 0 ? cctvVisionData.people.length : cctvVisionData.count} TRACKED)</span>
+            <span className="sm:hidden">CCTV ({cctvVisionData.people.length > 0 ? cctvVisionData.people.length : cctvVisionData.count})</span>
             <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-ping" />
           </button>
 
           <button
             type="button"
             onClick={() => setIsDroneView((v) => !v)}
-            className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 font-mono text-[11px] font-bold transition shadow-sm ${
+            className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 font-mono text-[11px] font-bold transition shadow-sm shrink-0 ${
               isDroneView
                 ? 'border border-rose-500 bg-rose-600 text-white shadow-rose-600/30'
                 : 'border border-sky-500/50 bg-sky-950/80 hover:bg-sky-900 text-sky-300'
             }`}
           >
             <Crosshair className="h-3.5 w-3.5 animate-pulse" />
-            <span>{isDroneView ? '🔴 EXIT DRONE FEED' : '🛰️ 3D DRONE THERMAL PATROL'}</span>
+            <span className="hidden sm:inline">{isDroneView ? '🔴 EXIT DRONE FEED' : '🛰️ 3D DRONE THERMAL PATROL'}</span>
+            <span className="sm:hidden">{isDroneView ? '🔴 EXIT' : '🛰️ DRONE PATROL'}</span>
           </button>
 
           <div className="hidden md:flex items-center gap-2">
@@ -221,15 +223,15 @@ export function EventMap() {
       </div>
 
       {/* Amenity / Stall Filter Strip */}
-      <div className="mb-3 flex flex-wrap items-center gap-1.5 border-y border-slate-800/80 py-2 text-xs">
-        <span className="flex items-center gap-1 font-mono text-[11px] font-semibold text-slate-400 mr-1">
+      <div className="mb-3 flex items-center gap-1.5 border-y border-slate-800/80 py-2 text-xs overflow-x-auto no-scrollbar scroll-smooth whitespace-nowrap">
+        <span className="flex items-center gap-1 font-mono text-[11px] font-semibold text-slate-400 mr-1 shrink-0">
           <Layers className="h-3 w-3 text-info" />
           Stalls & Safety:
         </span>
         <button
           type="button"
           onClick={() => setFacilityFilter('all')}
-          className={`rounded-md px-2.5 py-1 font-mono text-[11px] font-semibold transition ${
+          className={`shrink-0 rounded-md px-2.5 py-1 font-mono text-[11px] font-semibold transition ${
             facilityFilter === 'all'
               ? 'bg-slate-700 text-ink shadow-sm'
               : 'text-slate-400 hover:text-slate-200'

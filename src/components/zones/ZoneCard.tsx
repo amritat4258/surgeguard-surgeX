@@ -21,8 +21,8 @@ export function ZoneCard({ zone, prediction }: ZoneCardProps) {
     >
       {/* Header: name + CCTV button + risk badge */}
       <div className="flex items-start justify-between gap-2">
-        <div>
-          <h3 className="font-display text-base font-semibold text-slate-100">
+        <div className="min-w-0">
+          <h3 className="font-display text-base font-semibold text-slate-100 truncate">
             {zone.name}
           </h3>
           <p className="text-xs uppercase tracking-wide text-slate-500">
@@ -30,7 +30,7 @@ export function ZoneCard({ zone, prediction }: ZoneCardProps) {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap justify-end shrink-0">
           <button
             type="button"
             onClick={() => openCCTV(zone.id)}
@@ -41,14 +41,14 @@ export function ZoneCard({ zone, prediction }: ZoneCardProps) {
             <span>CCTV</span>
           </button>
 
-            <span
-              className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold tracking-wide ${style.badge}`}
-            >
-              <span className={`h-1.5 w-1.5 rounded-full ${style.dot}`} />
-              {style.label}
-            </span>
-          </div>
+          <span
+            className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold tracking-wide ${style.badge}`}
+          >
+            <span className={`h-1.5 w-1.5 rounded-full ${style.dot}`} />
+            {style.label}
+          </span>
         </div>
+      </div>
 
         {/* Occupancy */}
         <div className="mt-4">

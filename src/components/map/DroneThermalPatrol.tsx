@@ -105,29 +105,8 @@ export function DroneThermalPatrol({ onClose }: DroneThermalPatrolProps) {
     }, 3500);
   };
 
-  // Mouse Drag Handlers for 3D Orbit
-  const handleMouseDown = (e: React.MouseEvent) => {
-    isDraggingRef.current = true;
-    dragStartRef.current = { x: e.clientX, y: e.clientY, pitch, yaw };
-    setIsCinematicOrbit(false);
-  };
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (isDraggingRef.current) {
-      const deltaX = e.clientX - dragStartRef.current.x;
-      const deltaY = e.clientY - dragStartRef.current.y;
-      const newYaw = Math.min(50, Math.max(-50, dragStartRef.current.yaw + deltaX * 0.25));
-      const newPitch = Math.min(60, Math.max(12, dragStartRef.current.pitch - deltaY * 0.25));
-      setYaw(+newYaw.toFixed(1));
-      setPitch(+newPitch.toFixed(1));
-    }
-
-    // Laser Thermal Probe calculation relative to 800x520 map coordinates
-    const target = e.currentTarget.getBoundingClientRect();
-    const relX = ((e.clientX - target.left) / target.width) * 800;
-    const relY = ((e.clientY - target.top) / target.height) * 520;
-
-    // Distances to landmarks
+  // Helper for computing spot temperature
+  const calcLaserProbe = (relX: number, relY: number) => {
     const distGateB = Math.hypot(relX - 660, relY - 100);
     const distArena = Math.hypot(relX - 400, relY - 260);
     const distGateC = Math.hypot(relX - 400, relY - 65);
@@ -152,8 +131,83 @@ export function DroneThermalPatrol({ onClose }: DroneThermalPatrolProps) {
     setLaserProbe({ x: relX, y: relY, temp, label });
   };
 
+  // Mouse Drag Handlers for 3D Orbit
+  const handleMouseDown = (e: React.MouseEvent) => {
+    isDraggingRef.current = true;
+    dragStartRef.current = { x: e.clientX, y: e.clientY, pitch, yaw };
+    setIsCinematicOrbit(false);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (isDraggingRef.current) {
+      const deltaX = e.clientX - dragStartRef.current.x;
+      const deltaY = e.clientY - dragStartRef.current.y;
+      const newYaw = Math.min(50, Math.max(-50, dragStartRef.current.yaw + deltaX * 0.25));
+      const newPitch = Math.min(60, Math.max(12, dragStartRef.current.pitch - deltaY * 0.25));
+      setYaw(+newYaw.toFixed(1));
+      setPitch(+newPitch.toFixed(1));
+    }
+
+    const target = e.currentTarget.getBoundingClientRect();
+    const relX = ((e.clientX - target.left) / target.width) * 800;
+    const relY = ((e.clientY - target.top) / target.height) * 520;
+    calcLaserProbe(relX, relY);
+  };
+
   const handleMouseUp = () => {
     isDraggingRef.current = false;
+  };
+
+  // Touch Drag & Pinch Orbit Handlers for Mobile Phones
+  const touchPinchDistRef = useRef<number | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 1) {
+      isDraggingRef.current = true;
+      dragStartRef.current = {
+        x: e.touches[0].clientX,
+        y: e.touches[0].clientY,
+        pitch,
+        yaw,
+      };
+      setIsCinematicOrbit(false);
+    } else if (e.touches.length === 2) {
+      isDraggingRef.current = false;
+      touchPinchDistRef.current = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (e.touches.length === 1 && isDraggingRef.current) {
+      const deltaX = e.touches[0].clientX - dragStartRef.current.x;
+      const deltaY = e.touches[0].clientY - dragStartRef.current.y;
+      const newYaw = Math.min(50, Math.max(-50, dragStartRef.current.yaw + deltaX * 0.3));
+      const newPitch = Math.min(60, Math.max(12, dragStartRef.current.pitch - deltaY * 0.3));
+      setYaw(+newYaw.toFixed(1));
+      setPitch(+newPitch.toFixed(1));
+
+      const target = e.currentTarget.getBoundingClientRect();
+      const relX = ((e.touches[0].clientX - target.left) / target.width) * 800;
+      const relY = ((e.touches[0].clientY - target.top) / target.height) * 520;
+      calcLaserProbe(relX, relY);
+    } else if (e.touches.length === 2 && touchPinchDistRef.current) {
+      const currentDist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      const ratio = currentDist / touchPinchDistRef.current;
+      const newZoom = Math.min(2.5, Math.max(0.85, zoom * ratio));
+      setZoom(+newZoom.toFixed(2));
+      touchPinchDistRef.current = currentDist;
+    }
+  };
+
+  const handleTouchEnd = () => {
+    isDraggingRef.current = false;
+    touchPinchDistRef.current = null;
   };
 
   const handleWheel = (e: React.WheelEvent) => {
@@ -264,7 +318,7 @@ export function DroneThermalPatrol({ onClose }: DroneThermalPatrolProps) {
 
       {/* Main 3D Viewport with Interactive Drag Orbit & Laser Probe */}
       <div
-        className="relative overflow-hidden p-3 sm:p-5 cursor-grab active:cursor-grabbing"
+        className="relative overflow-hidden p-3 sm:p-5 cursor-grab active:cursor-grabbing touch-none"
         style={{ perspective: '1200px' }}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
@@ -273,6 +327,10 @@ export function DroneThermalPatrol({ onClose }: DroneThermalPatrolProps) {
           isDraggingRef.current = false;
           setLaserProbe(null);
         }}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onTouchCancel={handleTouchEnd}
         onWheel={handleWheel}
       >
         {/* Subtle Scanlines effect overlay */}
@@ -299,7 +357,7 @@ export function DroneThermalPatrol({ onClose }: DroneThermalPatrolProps) {
           </div>
         </div>
 
-        {/* Floating Laser Thermal Probe (Follows Mouse Cursor) */}
+        {/* Floating Laser Thermal Probe (Follows Mouse Cursor or Finger) */}
         {laserProbe && (
           <div
             className="absolute z-30 pointer-events-none flex flex-col gap-0.5 bg-slate-950/90 border border-amber-400/80 p-1.5 rounded-lg text-[10px] text-amber-300 font-mono shadow-xl backdrop-blur-sm -translate-x-1/2 -translate-y-12"
@@ -317,8 +375,29 @@ export function DroneThermalPatrol({ onClose }: DroneThermalPatrolProps) {
         )}
 
         {/* Instructions Overlay Badge */}
-        <div className="absolute top-4 left-4 z-20 pointer-events-none rounded-lg bg-black/60 border border-slate-800 px-2 py-1 text-[10px] text-slate-400">
-          <span>🖱️ Click & Drag to Orbit 3D Gimbal · Scroll to Zoom</span>
+        <div className="absolute top-3 left-3 z-20 pointer-events-none rounded-lg bg-black/60 border border-slate-800 px-2 py-1 text-[10px] text-slate-400">
+          <span className="hidden sm:inline">🖱️ Click & Drag to Orbit 3D Gimbal · Scroll to Zoom</span>
+          <span className="sm:hidden">👆 Touch & Drag to Orbit Gimbal</span>
+        </div>
+
+        {/* Quick Zoom Controls for Mobile Touch */}
+        <div className="absolute bottom-3 right-3 z-20 flex items-center gap-1 rounded-lg bg-black/70 border border-slate-800 p-1">
+          <button
+            type="button"
+            onClick={() => setZoom((z) => Math.min(2.5, +(z + 0.15).toFixed(2)))}
+            className="h-6 w-6 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs flex items-center justify-center transition"
+            title="Zoom In"
+          >
+            +
+          </button>
+          <button
+            type="button"
+            onClick={() => setZoom((z) => Math.max(0.85, +(z - 0.15).toFixed(2)))}
+            className="h-6 w-6 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs flex items-center justify-center transition"
+            title="Zoom Out"
+          >
+            -
+          </button>
         </div>
 
         {/* 3D Tilted Map Container */}
@@ -585,14 +664,14 @@ export function DroneThermalPatrol({ onClose }: DroneThermalPatrolProps) {
       )}
 
       {/* Interactive Drone Mission Controls Bottom Toolbar */}
-      <div className="flex flex-wrap items-center justify-between border-t border-slate-800 bg-slate-950/95 px-4 py-3 gap-3 text-xs">
+      <div className="flex flex-wrap items-center justify-between border-t border-slate-800 bg-slate-950/95 px-3 sm:px-4 py-2.5 sm:py-3 gap-2.5 sm:gap-3 text-xs">
         {/* Thermal Palette Selector */}
-        <div className="flex items-center gap-1.5">
-          <span className="text-[11px] font-bold text-slate-400 uppercase mr-1">FLIR Palette:</span>
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+          <span className="text-[11px] font-bold text-slate-400 uppercase mr-1 shrink-0">Palette:</span>
           <button
             type="button"
             onClick={() => setPalette('ironbow')}
-            className={`px-2.5 py-1 rounded-lg border transition text-[11px] ${
+            className={`px-2.5 py-1 rounded-lg border transition text-[11px] shrink-0 ${
               palette === 'ironbow' ? 'border-amber-400 bg-amber-500/20 text-amber-300 font-bold' : 'border-slate-800 text-slate-400 hover:text-ink'
             }`}
           >
@@ -601,7 +680,7 @@ export function DroneThermalPatrol({ onClose }: DroneThermalPatrolProps) {
           <button
             type="button"
             onClick={() => setPalette('whitehot')}
-            className={`px-2.5 py-1 rounded-lg border transition text-[11px] ${
+            className={`px-2.5 py-1 rounded-lg border transition text-[11px] shrink-0 ${
               palette === 'whitehot' ? 'border-slate-300 bg-slate-300/20 text-ink font-bold' : 'border-slate-800 text-slate-400 hover:text-ink'
             }`}
           >
@@ -610,44 +689,44 @@ export function DroneThermalPatrol({ onClose }: DroneThermalPatrolProps) {
           <button
             type="button"
             onClick={() => setPalette('nvg')}
-            className={`px-2.5 py-1 rounded-lg border transition text-[11px] ${
+            className={`px-2.5 py-1 rounded-lg border transition text-[11px] shrink-0 ${
               palette === 'nvg' ? 'border-emerald-400 bg-emerald-500/20 text-emerald-300 font-bold' : 'border-slate-800 text-slate-400 hover:text-ink'
             }`}
           >
-            🟢 NVG Phosphor
+            🟢 NVG
           </button>
         </div>
 
         {/* 3D Waypoint Orbit Locks */}
-        <div className="flex items-center gap-1.5">
-          <span className="text-[11px] font-bold text-slate-400 uppercase mr-1">Gimbal:</span>
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+          <span className="text-[11px] font-bold text-slate-400 uppercase mr-1 shrink-0">Gimbal:</span>
           <button
             type="button"
             onClick={() => handleWaypointSelect('gate-b')}
-            className={`px-2 py-1 rounded-lg border transition text-[11px] ${
+            className={`px-2 py-1 rounded-lg border transition text-[11px] shrink-0 ${
               activeWaypoint === 'gate-b' ? 'border-rose-500 bg-rose-500/20 text-rose-300 font-bold' : 'border-slate-800 text-slate-400 hover:text-ink'
             }`}
           >
-            🎯 Gate B Lock
+            🎯 Gate B
           </button>
           <button
             type="button"
             onClick={() => handleWaypointSelect('gate-c')}
-            className={`px-2 py-1 rounded-lg border transition text-[11px] ${
+            className={`px-2 py-1 rounded-lg border transition text-[11px] shrink-0 ${
               activeWaypoint === 'gate-c' ? 'border-emerald-500 bg-emerald-500/20 text-emerald-300 font-bold' : 'border-slate-800 text-slate-400 hover:text-ink'
             }`}
           >
-            🚪 Gate C Egress
+            🚪 Gate C
           </button>
           <button
             type="button"
             onClick={() => setIsCinematicOrbit((v) => !v)}
-            className={`px-2 py-1 rounded-lg border transition text-[11px] flex items-center gap-1 ${
+            className={`px-2 py-1 rounded-lg border transition text-[11px] shrink-0 flex items-center gap-1 ${
               isCinematicOrbit ? 'border-purple-500 bg-purple-500/20 text-purple-300 font-bold' : 'border-slate-800 text-slate-400 hover:text-ink'
             }`}
           >
             {isCinematicOrbit ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
-            <span>{isCinematicOrbit ? 'Pause Sweep' : '🎥 3D Flyover'}</span>
+            <span>{isCinematicOrbit ? 'Pause' : '🎥 Flyover'}</span>
           </button>
           <button
             type="button"
@@ -658,51 +737,52 @@ export function DroneThermalPatrol({ onClose }: DroneThermalPatrolProps) {
               setIsCinematicOrbit(false);
             }}
             title="Reset 3D Gimbal to Default"
-            className="p-1 rounded-lg border border-slate-800 text-slate-400 hover:text-ink"
+            className="p-1 rounded-lg border border-slate-800 text-slate-400 hover:text-ink shrink-0"
           >
             <RotateCcw className="h-3 w-3" />
           </button>
         </div>
 
         {/* AI & Particle Toggles */}
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-1.5 py-0.5">
           <button
             type="button"
             onClick={() => setShowParticles((v) => !v)}
-            className={`px-2 py-1 rounded-lg border text-[11px] transition ${
+            className={`px-2 py-1 rounded-lg border text-[11px] transition shrink-0 ${
               showParticles ? 'border-rose-500/80 bg-rose-500/20 text-rose-300 font-bold' : 'border-slate-800 text-slate-500'
             }`}
           >
-            Crowd Particles
+            Particles
           </button>
 
           <button
             type="button"
             onClick={() => setShowFlowVectors((v) => !v)}
-            className={`px-2 py-1 rounded-lg border text-[11px] transition ${
+            className={`px-2 py-1 rounded-lg border text-[11px] transition shrink-0 ${
               showFlowVectors ? 'border-amber-500/80 bg-amber-500/20 text-amber-300 font-bold' : 'border-slate-800 text-slate-500'
             }`}
           >
-            Flow Vectors
+            Vectors
           </button>
 
           <button
             type="button"
             onClick={() => setShowAIBoundingBoxes((v) => !v)}
-            className={`px-2 py-1 rounded-lg border text-[11px] transition ${
+            className={`px-2 py-1 rounded-lg border text-[11px] transition shrink-0 ${
               showAIBoundingBoxes ? 'border-sky-500/80 bg-sky-500/20 text-sky-300 font-bold' : 'border-slate-800 text-slate-500'
             }`}
           >
-            YOLO AI Brackets
+            YOLO AI
           </button>
 
           <button
             type="button"
             onClick={handleSnapshot}
-            className="flex items-center gap-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 px-3 py-1 font-bold text-white shadow-lg shadow-sky-600/30 transition hover:scale-105 active:scale-95"
+            className="flex items-center gap-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 px-2.5 sm:px-3 py-1 font-bold text-white shadow-lg shadow-sky-600/30 transition hover:scale-105 active:scale-95 shrink-0"
           >
             <Camera className="h-3.5 w-3.5" />
-            <span>Transmit Thermal Evidence</span>
+            <span className="hidden sm:inline">Transmit Evidence</span>
+            <span className="sm:hidden">Snapshot</span>
           </button>
         </div>
       </div>

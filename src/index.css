@@ -47,6 +47,28 @@ body::before {
   background: rgb(var(--color-info) / 0.5);
 }
 
+/* Utilities for touch devices & phone UI */
+.no-scrollbar::-webkit-scrollbar,
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar,
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.touch-pan-x {
+  touch-action: pan-x;
+  -webkit-overflow-scrolling: touch;
+}
+
+.touch-pan-y {
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+}
+
+
 /* ==========================================================================
    Premium Button System for All Themes
    ========================================================================== */

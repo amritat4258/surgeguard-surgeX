@@ -499,7 +499,7 @@ export default function AttendeeApp({ onExit }: AttendeeAppProps) {
             <span className="text-[10px] font-mono text-slate-500">Wait-Weighted Routing</span>
           </div>
 
-          <div className="-mx-1 mb-3 flex gap-1.5 overflow-x-auto px-1 pb-1 scrollbar-none">
+          <div className="-mx-1 mb-3 flex gap-1.5 overflow-x-auto px-1 pb-1 no-scrollbar scrollbar-none whitespace-nowrap">
             {FACILITY_FILTERS.map((f) => (
               <button
                 key={f.kind}

@@ -23,13 +23,12 @@ export default function AttendeeAppModal({ isOpen, onClose }: AttendeeAppModalPr
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-2 sm:p-4"
       onClick={onClose}
     >
       {/* Phone card */}
       <div
-        className="relative w-full max-w-sm rounded-3xl bg-slate-900 shadow-2xl border border-slate-700/60 overflow-hidden flex flex-col"
-        style={{ maxHeight: '92vh' }}
+        className="relative w-full max-w-sm rounded-2xl sm:rounded-3xl bg-slate-900 shadow-2xl border border-slate-700/60 overflow-hidden flex flex-col h-[94dvh] sm:h-auto sm:max-h-[92vh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Notch / camera bar */}

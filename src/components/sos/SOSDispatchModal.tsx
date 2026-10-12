@@ -92,41 +92,41 @@ export function SOSDispatchModal({ isOpen, onClose }: SOSDispatchModalProps) {
   const medkits = VENUE_FACILITIES.filter((f) => f.kind === 'medical');
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-3 sm:p-4 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative flex w-full max-w-4xl max-h-[92vh] flex-col rounded-2xl border-2 border-rose-500/80 bg-slate-950 text-slate-100 shadow-[0_0_60px_rgba(244,63,94,0.35)] overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-0 sm:p-4 backdrop-blur-md animate-in fade-in duration-200">
+      <div className="relative flex w-full max-w-4xl h-[100dvh] sm:h-auto sm:max-h-[92vh] flex-col rounded-none sm:rounded-2xl border-0 sm:border-2 border-rose-500/80 bg-slate-950 text-slate-100 shadow-[0_0_60px_rgba(244,63,94,0.35)] overflow-hidden">
         {/* Header Bar */}
-        <div className="flex flex-wrap items-center justify-between border-b border-rose-900/60 bg-gradient-to-r from-rose-950/90 via-slate-950 to-rose-950/90 px-5 py-3 gap-2">
-          <div className="flex items-center gap-2.5">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-rose-600 text-white shadow-md shadow-rose-600/50 animate-pulse">
+        <div className="flex flex-wrap items-center justify-between border-b border-rose-900/60 bg-gradient-to-r from-rose-950/90 via-slate-950 to-rose-950/90 px-3.5 sm:px-5 py-2.5 sm:py-3 gap-2">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-rose-600 text-white shadow-md shadow-rose-600/50 animate-pulse">
               <Siren className="h-5 w-5" />
             </span>
-            <div>
+            <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <span className="font-mono text-xs font-black tracking-widest text-rose-300">
-                  SURGEGUARD // EMERGENCY SOS HUB
+                <span className="font-mono text-xs font-black tracking-widest text-rose-300 truncate">
+                  SOS HUB
                 </span>
                 {activeSOS ? (
-                  <span className="rounded-full bg-rose-500/20 border border-rose-500/60 px-2 py-0.5 text-[10px] font-mono font-bold text-rose-300 animate-pulse">
+                  <span className="rounded-full bg-rose-500/20 border border-rose-500/60 px-2 py-0.5 text-[10px] font-mono font-bold text-rose-300 animate-pulse shrink-0">
                     INCIDENT ACTIVE
                   </span>
                 ) : (
-                  <span className="rounded-full bg-emerald-500/20 border border-emerald-500/50 px-2 py-0.5 text-[10px] font-mono font-bold text-emerald-400">
-                    MONITORING // STANDBY
+                  <span className="rounded-full bg-emerald-500/20 border border-emerald-500/50 px-2 py-0.5 text-[10px] font-mono font-bold text-emerald-400 shrink-0">
+                    MONITORING
                   </span>
                 )}
               </div>
-              <h3 className="font-display text-base font-bold text-ink">
-                {activeSOS ? activeSOS.label : 'Emergency Operations & Triage Console'}
+              <h3 className="font-display text-sm sm:text-base font-bold text-ink truncate">
+                {activeSOS ? activeSOS.label : 'Emergency Operations Console'}
               </h3>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             {/* Auto Dispatch Toggle */}
             <button
               type="button"
               onClick={toggleAutoDispatch}
-              className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-mono font-bold transition ${
+              className={`hidden sm:flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-mono font-bold transition ${
                 autoDispatchEnabled
                   ? 'border-emerald-500/60 bg-emerald-950/50 text-emerald-300'
                   : 'border-slate-800 bg-slate-900 text-slate-400 hover:text-slate-200'
@@ -134,7 +134,7 @@ export function SOSDispatchModal({ isOpen, onClose }: SOSDispatchModalProps) {
               title="Automatically dispatch nearest medkit when critical SOS arrives"
             >
               <Zap className={`h-3.5 w-3.5 ${autoDispatchEnabled ? 'text-emerald-400' : 'text-slate-500'}`} />
-              <span>Auto-Dispatch: {autoDispatchEnabled ? 'ON' : 'OFF'}</span>
+              <span>Auto: {autoDispatchEnabled ? 'ON' : 'OFF'}</span>
             </button>
 
             {/* View Switcher Tabs */}
@@ -142,26 +142,28 @@ export function SOSDispatchModal({ isOpen, onClose }: SOSDispatchModalProps) {
               <button
                 type="button"
                 onClick={() => setActiveTab('dispatcher')}
-                className={`flex items-center gap-1.5 rounded-md px-3 py-1 font-semibold transition ${
+                className={`flex items-center gap-1.5 rounded-md px-2.5 sm:px-3 py-1 font-semibold transition ${
                   activeTab === 'dispatcher'
                     ? 'bg-rose-600 text-white shadow-sm'
                     : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
                 <ShieldAlert className="h-3.5 w-3.5" />
-                <span>Command Dispatcher</span>
+                <span className="hidden sm:inline">Command Dispatcher</span>
+                <span className="sm:hidden">Dispatcher</span>
               </button>
               <button
                 type="button"
                 onClick={() => setActiveTab('attendee')}
-                className={`flex items-center gap-1.5 rounded-md px-3 py-1 font-semibold transition ${
+                className={`flex items-center gap-1.5 rounded-md px-2.5 sm:px-3 py-1 font-semibold transition ${
                   activeTab === 'attendee'
                     ? 'bg-rose-600 text-white shadow-sm'
                     : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
                 <Smartphone className="h-3.5 w-3.5" />
-                <span>Attendee 1-Tap SOS</span>
+                <span className="hidden sm:inline">Attendee 1-Tap SOS</span>
+                <span className="sm:hidden">1-Tap SOS</span>
               </button>
             </div>
 
@@ -177,7 +179,7 @@ export function SOSDispatchModal({ isOpen, onClose }: SOSDispatchModalProps) {
         </div>
 
         {/* Modal Scrollable Body */}
-        <div className="flex-1 overflow-y-auto p-5 space-y-5">
+        <div className="flex-1 overflow-y-auto p-3.5 sm:p-5 space-y-4 sm:space-y-5">
           {/* TAB 1: COMMAND DISPATCHER VIEW */}
           {activeTab === 'dispatcher' && (
             <>

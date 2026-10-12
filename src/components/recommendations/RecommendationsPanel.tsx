@@ -30,12 +30,12 @@ export function RecommendationsPanel() {
     <>
       <div className="rounded-xl border border-surface-border bg-surface-panel p-4 flex flex-col justify-between">
         <div>
-          <div className="mb-3 flex items-center justify-between">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
             <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-slate-400">
               <Lightbulb className="h-4 w-4" />
               Recommended Response
             </h2>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <button
                 type="button"
                 onClick={() => setIsBroadcastOpen(true)}
